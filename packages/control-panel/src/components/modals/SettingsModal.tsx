@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -8,6 +8,7 @@ import { useToast } from '../ui/Toast';
 import { useSettings, useUpdateSettings, useExportSettings, useImportSettings, useResetSettings } from '../../hooks/useSettings';
 import { useDisplays } from '../../hooks/useDisplays';
 import { useTestRedAlert } from '../../hooks/useRedAlert';
+import { api } from '../../lib/api';
 import type { AppSettings } from '@screen-commander/shared';
 import { DEFAULT_SETTINGS } from '@screen-commander/shared';
 
@@ -16,7 +17,7 @@ interface SettingsModalProps {
   onClose: () => void;
 }
 
-type Section = 'general' | 'network' | 'players' | 'messages' | 'red-alert' | 'backup' | 'about';
+type Section = 'general' | 'network' | 'players' | 'messages' | 'red-alert' | 'kiosk' | 'backup' | 'about';
 
 const sections: { key: Section; label: string }[] = [
   { key: 'general', label: 'כללי' },
@@ -24,6 +25,7 @@ const sections: { key: Section; label: string }[] = [
   { key: 'players', label: 'נגנים' },
   { key: 'messages', label: 'הודעות' },
   { key: 'red-alert', label: 'התרעות' },
+  { key: 'kiosk', label: 'קיוסק' },
   { key: 'backup', label: 'גיבוי' },
   { key: 'about', label: 'אודות' },
 ];
@@ -41,6 +43,50 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
   const [active, setActive] = useState<Section>('general');
   const [form, setForm] = useState<AppSettings | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
+
+  // Kiosk password change state
+  const [kioskCurrentPw, setKioskCurrentPw] = useState('');
+  const [kioskNewPw, setKioskNewPw] = useState('');
+  const [kioskConfirmPw, setKioskConfirmPw] = useState('');
+  const [kioskPwError, setKioskPwError] = useState('');
+  const [kioskPwPending, setKioskPwPending] = useState(false);
+
+  const handleChangeKioskPassword = useCallback(async () => {
+    setKioskPwError('');
+
+    if (!kioskCurrentPw) {
+      setKioskPwError('יש להזין סיסמה ��וכחית');
+      return;
+    }
+    if (kioskNewPw.length < 4) {
+      setKioskPwError('סיסמה חדשה חייבת להכיל לפחות 4 תווים');
+      return;
+    }
+    if (kioskNewPw !== kioskConfirmPw) {
+      setKioskPwError('הסיסמאות אינן תואמות');
+      return;
+    }
+
+    setKioskPwPending(true);
+    try {
+      const result = await api.post<{ success: boolean }>('/auth/change-kiosk-password', {
+        currentPassword: kioskCurrentPw,
+        newPassword: kioskNewPw,
+      });
+      if (result.success) {
+        toast('סיסמת הקיוסק שונתה', 'success');
+        setKioskCurrentPw('');
+        setKioskNewPw('');
+        setKioskConfirmPw('');
+      } else {
+        setKioskPwError('הסיסמה הנוכחית שגויה');
+      }
+    } catch {
+      setKioskPwError('שגיאה בשינוי סיסמה');
+    } finally {
+      setKioskPwPending(false);
+    }
+  }, [kioskCurrentPw, kioskNewPw, kioskConfirmPw, toast]);
 
   useEffect(() => {
     if (settings) setForm({ ...DEFAULT_SETTINGS, ...settings });
@@ -296,6 +342,69 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
                   שלח התרעת מבחן
                 </Button>
               </div>
+            </>
+          )}
+
+          {active === 'kiosk' && form.kiosk && (
+            <>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.8125rem', marginBottom: 12 }}>
+                הגדרות נעילת קיוסק — שליטה בגישה ללוח הבקרה במצב ייצור
+              </p>
+
+              <div style={{ padding: '16px', borderRadius: 'var(--radius-md)', background: 'var(--bg-elevated)', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-primary)' }}>שינוי סיסמת מנהל</div>
+                <Input
+                  label="סיסמה נוכחית"
+                  type="password"
+                  value={kioskCurrentPw}
+                  onChange={(e) => setKioskCurrentPw(e.target.value)}
+                  ltr
+                />
+                <Input
+                  label="סיסמה חדשה"
+                  type="password"
+                  value={kioskNewPw}
+                  onChange={(e) => setKioskNewPw(e.target.value)}
+                  ltr
+                />
+                <Input
+                  label="אימות סיסמה חדשה"
+                  type="password"
+                  value={kioskConfirmPw}
+                  onChange={(e) => setKioskConfirmPw(e.target.value)}
+                  ltr
+                />
+                {kioskPwError && (
+                  <div style={{ color: 'var(--red)', fontSize: '0.8125rem' }}>{kioskPwError}</div>
+                )}
+                <Button
+                  size="sm"
+                  onClick={() => { void handleChangeKioskPassword(); }}
+                  disabled={kioskPwPending}
+                >
+                  {kioskPwPending ? 'משנה...' : 'שנה סיסמה'}
+                </Button>
+              </div>
+
+              <Input
+                label="זמן נעילה אוטומטית (שניות)"
+                type="number"
+                value={form.kiosk.autoRelockTimeoutSeconds}
+                onChange={(e) => setForm({ ...form, kiosk: { ...form.kiosk, autoRelockTimeoutSeconds: parseInt(e.target.value, 10) || 300 } })}
+              />
+
+              <div style={{ padding: '12px 16px', borderRadius: 'var(--radius-md)', background: 'var(--bg-elevated)', border: '1px solid var(--border)' }}>
+                <div style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', marginBottom: 4 }}>
+                  קיצור פתיחת נעילה
+                </div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.875rem', color: 'var(--accent)', direction: 'ltr', textAlign: 'right' }}>
+                  {form.kiosk.unlockKeyCombination}
+                </div>
+              </div>
+
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
+                סיסמת ברירת מחדל: admin — מומלץ לשנות לפני הפעלה בייצור
+              </p>
             </>
           )}
 

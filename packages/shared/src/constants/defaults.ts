@@ -51,4 +51,9 @@ export const DEFAULT_SETTINGS = {
     animation: 'fade-in',
     messageTemplate: '🚨 {type}: {cities}',
   },
+  kiosk: {
+    adminPasswordHash: '',
+    autoRelockTimeoutSeconds: 300,
+    unlockKeyCombination: 'Ctrl+Shift+K',
+  },
 };

@@ -50,7 +50,17 @@
       "Bash(powershell -Command \"Get-CimInstance Win32_Process -Filter \\\\\"Name='node.exe'\\\\\" | Where-Object { \\\\$_.CommandLine -like '*tsx*watch*' } | ForEach-Object { Stop-Process -Id \\\\$_.ProcessId -Force }; Write-Host 'Killed backend processes'\" 2>&1)",
       "Bash(npx prisma:*)",
       "Bash(powershell -Command \"Get-CimInstance Win32_Process -Filter \\\\\"Name='node.exe'\\\\\" | Where-Object { \\\\$_.CommandLine -like '*tsx*watch*' } | ForEach-Object { Stop-Process -Id \\\\$_.ProcessId -Force }; Write-Host 'Done'\" 2>&1)",
-      "Bash(powershell -Command \"Get-CimInstance Win32_Process -Filter \\\\\"Name='node.exe'\\\\\" | Where-Object { \\\\$_.CommandLine -like '*tsx*watch*' } | ForEach-Object { Stop-Process -Id \\\\$_.ProcessId -Force }; Write-Host 'Killed'\" 2>&1)"
+      "Bash(powershell -Command \"Get-CimInstance Win32_Process -Filter \\\\\"Name='node.exe'\\\\\" | Where-Object { \\\\$_.CommandLine -like '*tsx*watch*' } | ForEach-Object { Stop-Process -Id \\\\$_.ProcessId -Force }; Write-Host 'Killed'\" 2>&1)",
+      "Bash(taskkill //f //im electron.exe)",
+      "Bash(pnpm --filter @screen-commander/service build)",
+      "Bash(powershell -Command \"Get-EventLog -LogName Application -Source 'screencommanderbackend*' -Newest 5 -ErrorAction SilentlyContinue | Format-List TimeGenerated,Message\" 2>&1)",
+      "Bash(powershell -Command \"Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue | Select-Object OwningProcess,State | Format-Table\" 2>&1)",
+      "Bash(pnpm --filter @screen-commander/player build)",
+      "Bash(powershell -Command \"Get-EventLog -LogName Application -Source 'screencommanderbackend*' -Newest 5 -ErrorAction SilentlyContinue | Select-Object TimeGenerated,Message | Format-List\")",
+      "Bash(NODE_ENV=production PORT=3001 node --experimental-require-module packages/backend/dist/index.js)",
+      "Bash(pnpm build:*)",
+      "Bash(pnpm --filter @screen-commander/kiosk build)",
+      "Bash(powershell -Command \"Get-WmiObject Win32_Service | Where-Object { \\\\$_.Name -eq 'screencommanderbackend.exe' } | Select-Object StartName,State | Format-List\")"
     ]
   }
 }

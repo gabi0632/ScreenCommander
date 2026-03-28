@@ -34,6 +34,11 @@ export const appSettingsSchema = z.object({
     animation: z.enum(['fade-in', 'slide-up', 'slide-left', 'typewriter']).default('fade-in'),
     messageTemplate: z.string().default('🚨 {type}: {cities}'),
   }),
+  kiosk: z.object({
+    adminPasswordHash: z.string().default(''),
+    autoRelockTimeoutSeconds: z.number().int().min(30).max(3600).default(300),
+    unlockKeyCombination: z.string().default('Ctrl+Shift+K'),
+  }),
 });
 
 export type AppSettingsInput = z.infer<typeof appSettingsSchema>;

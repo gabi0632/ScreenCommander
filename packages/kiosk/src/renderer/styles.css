@@ -1,0 +1,266 @@
+/* ScreenCommander Kiosk — Splash Screen */
+
+:root {
+  --bg-deep: #060b14;
+  --bg-primary: #0b1120;
+  --bg-card: #151f32;
+  --accent: #00d4aa;
+  --accent-glow: rgba(0, 212, 170, 0.12);
+  --text-primary: #e8edf5;
+  --text-secondary: #8899b4;
+  --text-muted: #4d6080;
+  --red: #ff4d6a;
+  --border: #1e2d4a;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Heebo', 'Segoe UI', sans-serif;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  direction: rtl;
+  overflow: hidden;
+  user-select: none;
+  -webkit-app-region: no-drag;
+}
+
+.splash-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100vw;
+  position: relative;
+  background: radial-gradient(ellipse at center, var(--bg-primary) 0%, var(--bg-deep) 100%);
+}
+
+.splash-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 48px;
+  z-index: 2;
+}
+
+.splash-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.logo-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--accent), #00a888);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--bg-deep);
+  letter-spacing: 1px;
+  box-shadow: 0 0 40px var(--accent-glow), 0 0 80px rgba(0, 212, 170, 0.06);
+}
+
+.logo-title {
+  font-size: 32px;
+  font-weight: 300;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+.splash-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  min-height: 80px;
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.status-text {
+  font-size: 16px;
+  color: var(--text-secondary);
+  direction: rtl;
+}
+
+.status-text.error {
+  color: var(--red);
+}
+
+.status-text.ready {
+  color: var(--accent);
+}
+
+.retry-button {
+  padding: 10px 28px;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  font-family: 'Heebo', sans-serif;
+  font-size: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.retry-button:hover {
+  background: var(--accent-glow);
+}
+
+.scanline-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+}
+
+/* Kiosk Unlock Overlay — injected into the control panel page */
+
+.kiosk-unlock-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(6, 11, 20, 0.92);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  direction: rtl;
+  font-family: 'Heebo', 'Segoe UI', sans-serif;
+}
+
+.kiosk-unlock-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 40px;
+  width: 380px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.kiosk-unlock-panel h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.kiosk-unlock-panel input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: 'Heebo', sans-serif;
+  font-size: 16px;
+  border-radius: 8px;
+  outline: none;
+  direction: ltr;
+  text-align: center;
+}
+
+.kiosk-unlock-panel input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+.kiosk-unlock-error {
+  color: var(--red);
+  font-size: 14px;
+  min-height: 20px;
+}
+
+.kiosk-unlock-actions {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+
+.kiosk-unlock-actions button {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-family: 'Heebo', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid var(--border);
+}
+
+.kiosk-btn-verify {
+  background: var(--accent);
+  color: var(--bg-deep);
+  border-color: var(--accent) !important;
+}
+
+.kiosk-btn-verify:hover {
+  filter: brightness(1.1);
+}
+
+.kiosk-btn-cancel {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.kiosk-btn-cancel:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.kiosk-btn-exit {
+  background: var(--red);
+  color: white;
+  border-color: var(--red) !important;
+}
+
+.kiosk-btn-exit:hover {
+  filter: brightness(1.1);
+}
+
+.kiosk-btn-minimize {
+  background: transparent;
+  color: var(--accent);
+  border-color: var(--accent) !important;
+}
+
+.kiosk-btn-minimize:hover {
+  background: var(--accent-glow);
+}

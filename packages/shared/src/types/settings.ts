@@ -32,4 +32,9 @@ export interface AppSettings {
     animation: string;
     messageTemplate: string;
   };
+  kiosk: {
+    adminPasswordHash: string;
+    autoRelockTimeoutSeconds: number;
+    unlockKeyCombination: string;
+  };
 }
