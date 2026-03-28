@@ -39,17 +39,16 @@ export function App(): React.JSX.Element {
   }, [content, overlays]);
 
   const tickerActive = hasActiveTicker && (tickerConfig?.messages?.some((m) => m.isActive) ?? false);
-  const tickerHeight = tickerActive ? 72 : 0;
 
   return (
     <>
-      {/* Layer 1: Content — shrinks above ticker */}
+      {/* Layer 1: Content — always full screen, ticker overlays on top */}
       <div style={{
         position: 'absolute',
         top: 0,
         left: 0,
         width: '100%',
-        height: tickerActive ? `calc(100% - ${tickerHeight}px)` : '100%',
+        height: '100%',
         overflow: 'hidden',
         background: '#000',
       }}>
