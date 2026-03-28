@@ -48,7 +48,7 @@ export function App(): React.JSX.Element {
         top: 0,
         left: 0,
         width: '100%',
-        height: tickerActive ? 'calc(100% - 40px)' : '100%',
+        height: tickerActive ? 'calc(100% - 52px)' : '100%',
         overflow: 'hidden',
         background: '#000',
       }}>
