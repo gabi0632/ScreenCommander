@@ -17,7 +17,7 @@ function triggerUnlock(): void {
   if (unlockCallback) unlockCallback();
 }
 
-export function createKioskWindow(): BrowserWindow {
+export function createKioskWindow(url?: string): BrowserWindow {
   const primaryDisplay = screen.getPrimaryDisplay();
   bounds = { ...primaryDisplay.bounds };
 
@@ -170,8 +170,10 @@ export function createKioskWindow(): BrowserWindow {
     kioskWindow = null;
   });
 
-  // Load the splash screen
-  if (process.env['ELECTRON_RENDERER_URL']) {
+  // Load the control panel URL directly (no splash screen)
+  if (url) {
+    kioskWindow.loadURL(url);
+  } else if (process.env['ELECTRON_RENDERER_URL']) {
     kioskWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
   } else {
     kioskWindow.loadFile(join(__dirname, '../renderer/index.html'));
