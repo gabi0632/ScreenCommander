@@ -1,3 +1,4 @@
+import { resolve } from 'path';
 import express from 'express';
 import cors from 'cors';
 import { displaysRouter } from './routes/displays.routes';
@@ -11,6 +12,7 @@ import { favoritesRouter } from './routes/favorites.routes';
 import { tickerRouter } from './routes/ticker.routes';
 import { uploadsRouter } from './routes/uploads.routes';
 import { redAlertRouter } from './routes/red-alert.routes';
+import { authRouter } from './routes/auth.routes';
 import { errorHandler } from './middleware/error-handler';
 
 export const app = express();
@@ -31,6 +33,22 @@ app.use('/api/favorites', favoritesRouter);
 app.use('/api/ticker', tickerRouter);
 app.use('/api/uploads', uploadsRouter);
 app.use('/api/red-alert', redAlertRouter);
+app.use('/api/auth', authRouter);
+
+// In production, serve the built control panel as static files
+// This allows the kiosk to load everything from http://localhost:3000
+if (process.env['NODE_ENV'] === 'production') {
+  const controlPanelDist = resolve(__dirname, '..', '..', 'control-panel', 'dist');
+  app.use(express.static(controlPanelDist));
+
+  // SPA fallback — serve index.html for non-API routes
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/socket.io')) {
+      return next();
+    }
+    res.sendFile(resolve(controlPanelDist, 'index.html'));
+  });
+}
 
 // 404 handler
 app.use((_req, res) => {

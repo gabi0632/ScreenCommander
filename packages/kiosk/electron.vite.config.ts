@@ -6,7 +6,7 @@ export default defineConfig({
     build: {
       outDir: 'dist/main',
       rollupOptions: {
-        external: ['electron', 'bufferutil', 'utf-8-validate', '@screen-commander/shared'],
+        external: ['electron', '@screen-commander/shared'],
       },
     },
   },
@@ -22,13 +22,6 @@ export default defineConfig({
     plugins: [react()],
     build: {
       outDir: 'dist/renderer',
-      commonjsOptions: {
-        include: [/shared/, /node_modules/],
-        transformMixedEsModules: true,
-      },
-    },
-    optimizeDeps: {
-      include: ['@screen-commander/shared'],
     },
   },
 });

@@ -11,12 +11,11 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "composite": true,
     "declaration": true,
-    "declarationMap": true,
     "sourceMap": true,
     "outDir": "./dist",
     "rootDir": "./src"
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/main/**/*.ts", "src/preload/**/*.ts"],
+  "references": [{ "path": "../shared" }]
 }

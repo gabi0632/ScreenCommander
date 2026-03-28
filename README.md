@@ -72,8 +72,10 @@ screen-commander/
 │   ├── shared/           # Types, Zod schemas, enums, constants
 │   ├── backend/          # Express REST API + Socket.IO + Prisma
 │   ├── control-panel/    # React Hebrew RTL dashboard
-│   └── player/           # Electron fullscreen player (one per monitor)
-├── scripts/              # PowerShell utilities (detect-monitors, start/stop)
+│   ├── player/           # Electron fullscreen player (one per monitor)
+│   ├── kiosk/            # Electron kiosk shell (locks control panel for production)
+│   └── service/          # Windows service installer (node-windows)
+├── scripts/              # PowerShell utilities (install/uninstall service, detect monitors)
 ├── turbo.json            # Turborepo pipeline config
 ├── pnpm-workspace.yaml   # pnpm workspace config
 └── package.json
@@ -190,7 +192,76 @@ Get `<DISPLAY_ID>` from `curl http://127.0.0.1:3000/api/displays`.
 - Network: backend port, URL
 - Players: auto-start, kiosk mode, cursor, render quality
 - Messages: default duration, animation, position, font size
+- Kiosk: admin password, auto-relock timeout, unlock key combination
 - Backup: export/import settings, reset to defaults
+
+---
+
+## Production Deployment (Windows Service + Kiosk)
+
+ScreenCommander can run as a persistent Windows service with a locked kiosk control panel that auto-starts on boot.
+
+### What Gets Installed
+
+- **Backend service** — runs as a native Windows service (`ScreenCommander Backend`) via `node-windows`. Auto-starts on boot, auto-restarts on crash (up to 10 retries with exponential backoff). Visible in `services.msc`.
+- **Kiosk app** — Electron shell that locks the control panel in fullscreen on the primary monitor. Cannot be exited without an admin password. Auto-launches on user login via a startup shortcut.
+
+### Install
+
+Run **as Administrator**:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\install-service.ps1
+```
+
+This will:
+1. Build all packages for production
+2. Run database migrations
+3. Install the backend as a Windows service
+4. Create a kiosk auto-start shortcut
+
+### Uninstall
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\uninstall-service.ps1
+```
+
+### Check Status
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\service-status.ps1
+```
+
+### Kiosk Lockdown
+
+When the kiosk is running:
+- The control panel fills the primary monitor with no title bar or taskbar
+- Alt+F4, Ctrl+W, Ctrl+Q are blocked
+- Clicking other monitors does NOT minimize the kiosk
+- Press **Ctrl+Shift+K** to open the unlock overlay
+- Default admin password: `admin` (change in Settings → קיוסק)
+- After unlocking: **יציאה** (exit) or **מזעור** (minimize with 5-min auto-relock)
+
+### Rebuild for Production
+
+After making code changes, rebuild and the service picks up changes on restart:
+
+```bash
+pnpm build                              # Build all packages
+powershell -Command "Restart-Service 'screencommanderbackend.exe'"  # Restart backend service
+```
+
+The kiosk picks up changes on next login (or restart it manually with `pnpm kiosk:dev`).
+
+### Service Management Commands
+
+```bash
+pnpm service:install    # Build + install backend service
+pnpm service:uninstall  # Remove backend service
+pnpm service:status     # Check service state
+pnpm kiosk:dev          # Run kiosk in dev mode (no install needed)
+pnpm kiosk:build        # Build kiosk for production
+```
 
 ---
 
@@ -208,6 +279,7 @@ All endpoints at `http://localhost:3000/api/`:
 | Analytics | `GET /analytics/summary`, `/uptime`, `/content-usage`, `/activity`, `/history` |
 | Settings | `GET/PUT /settings`, `POST /settings/export`, `/import`, `/reset` |
 | Favorites | `GET/POST /favorites`, `PUT/DELETE /favorites/:id` |
+| Auth | `POST /auth/verify-kiosk-password`, `POST /auth/change-kiosk-password` |
 
 ## WebSocket Events
 
@@ -249,13 +321,18 @@ All endpoints at `http://localhost:3000/api/`:
 ### Useful Commands
 
 ```bash
-pnpm dev                        # Start all services (Turborepo)
+pnpm dev                        # Start backend + control panel + player (Turborepo)
 pnpm build                      # Build all packages
 pnpm lint                       # Lint everything
 pnpm typecheck                  # Type-check all packages
 pnpm --filter backend dev       # Backend only
 pnpm --filter control-panel dev # Control panel only
 pnpm --filter player dev        # Player only
+pnpm kiosk:dev                  # Kiosk mode (Electron locked control panel)
+pnpm kiosk:build                # Build kiosk for production
+pnpm service:install            # Install backend as Windows service
+pnpm service:uninstall          # Remove backend Windows service
+pnpm service:status             # Check service status
 pnpm --filter backend prisma studio  # Open Prisma Studio (DB browser)
 ```
 

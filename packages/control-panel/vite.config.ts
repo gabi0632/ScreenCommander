@@ -10,4 +10,13 @@ export default defineConfig({
       '/socket.io': { target: 'http://localhost:3000', ws: true },
     },
   },
+  build: {
+    commonjsOptions: {
+      include: [/shared/, /node_modules/],
+      transformMixedEsModules: true,
+    },
+  },
+  optimizeDeps: {
+    include: ['@screen-commander/shared'],
+  },
 });
