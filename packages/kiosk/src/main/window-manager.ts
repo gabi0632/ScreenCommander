@@ -80,11 +80,17 @@ export function createKioskWindow(): BrowserWindow {
     }
   });
 
-  // === On blur: stay on top without stealing focus ===
+  // === On blur: immediately reclaim focus when locked ===
   kioskWindow.on('blur', () => {
     if (locked && kioskWindow && !kioskWindow.isDestroyed()) {
-      kioskWindow.setAlwaysOnTop(true, 'screen-saver');
-      kioskWindow.moveTop();
+      // Small delay so Windows finishes the Alt+Tab animation, then grab back
+      setTimeout(() => {
+        if (locked && kioskWindow && !kioskWindow.isDestroyed()) {
+          kioskWindow.setAlwaysOnTop(true, 'screen-saver');
+          kioskWindow.moveTop();
+          kioskWindow.focus();
+        }
+      }, 50);
     }
   });
 
@@ -111,6 +117,12 @@ export function createKioskWindow(): BrowserWindow {
   });
   console.log('[kiosk] globalShortcut registered:', registered);
 
+  // Try to consume Alt+Tab at OS level (may not work on all Windows versions)
+  globalShortcut.register('Alt+Tab', () => { /* consumed — do nothing */ });
+  globalShortcut.register('Alt+Shift+Tab', () => { /* consumed */ });
+  globalShortcut.register('Super+Tab', () => { /* consumed */ });
+  globalShortcut.register('Super+D', () => { /* block show desktop */ });
+
   // === METHOD 3: before-input-event (Chromium-level) ===
   kioskWindow.webContents.on('before-input-event', (event, input) => {
     if (input.type === 'keyDown' && input.control && input.shift &&
@@ -122,9 +134,12 @@ export function createKioskWindow(): BrowserWindow {
 
     if (!locked) return;
     if (input.alt && input.key === 'F4') { event.preventDefault(); return; }
+    if (input.alt && input.key === 'Tab') { event.preventDefault(); return; }
     if (input.control && input.key.toLowerCase() === 'w') { event.preventDefault(); return; }
     if (input.control && input.key.toLowerCase() === 'q') { event.preventDefault(); return; }
     if (input.key === 'F11') { event.preventDefault(); return; }
+    // Block Win key combinations
+    if (input.meta) { event.preventDefault(); return; }
   });
 
   // === METHOD 4: Inject JS keydown listener after page loads ===
@@ -151,7 +166,7 @@ export function createKioskWindow(): BrowserWindow {
   });
 
   kioskWindow.on('closed', () => {
-    globalShortcut.unregister('CommandOrControl+Shift+K');
+    globalShortcut.unregisterAll();
     kioskWindow = null;
   });
 
