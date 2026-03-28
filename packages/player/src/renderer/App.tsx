@@ -42,13 +42,13 @@ export function App(): React.JSX.Element {
 
   return (
     <>
-      {/* Layer 1: Content — always full screen, ticker overlays on top */}
+      {/* Layer 1: Content — shrinks above ticker */}
       <div style={{
         position: 'absolute',
         top: 0,
         left: 0,
         width: '100%',
-        height: '100%',
+        height: tickerActive ? 'calc(100% - 40px)' : '100%',
         overflow: 'hidden',
         background: '#000',
       }}>
