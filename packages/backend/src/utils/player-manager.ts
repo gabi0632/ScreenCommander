@@ -1,34 +1,84 @@
-import { spawn, type ChildProcess } from 'child_process';
+import { spawn, execSync, type ChildProcess } from 'child_process';
 import { join } from 'path';
+import { existsSync, readdirSync } from 'fs';
 import { logger } from './logger';
 
 const playerProcesses = new Map<string, ChildProcess>();
 
 function getProjectRoot(): string {
-  // Navigate from packages/backend/src/utils/ to project root
   return join(__dirname, '..', '..', '..', '..');
 }
 
+function findElectronExe(): string {
+  const projectRoot = getProjectRoot();
+
+  // Direct path (npm-style hoisting)
+  const direct = join(projectRoot, 'node_modules', 'electron', 'dist', 'electron.exe');
+  if (existsSync(direct)) return direct;
+
+  // pnpm store path
+  const pnpmDir = join(projectRoot, 'node_modules', '.pnpm');
+  if (existsSync(pnpmDir)) {
+    const entries = readdirSync(pnpmDir);
+    for (const entry of entries) {
+      if (entry.startsWith('electron@')) {
+        const candidate = join(pnpmDir, entry, 'node_modules', 'electron', 'dist', 'electron.exe');
+        if (existsSync(candidate)) return candidate;
+      }
+    }
+  }
+
+  // Fallback: use pnpm to find it
+  return 'electron';
+}
+
+const isProduction = process.env['NODE_ENV'] === 'production';
+
 export function spawnPlayer(displayId: string, monitorIndex: number): void {
-  // Kill existing process for this display if any
   killPlayer(displayId);
 
   const projectRoot = getProjectRoot();
-  const pnpmCmd = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
+  const backendUrl = `http://127.0.0.1:${process.env['PORT'] ?? '3000'}`;
 
-  logger.info(`Spawning player for display ${displayId} on monitor ${monitorIndex}`);
+  logger.info(`Spawning player for display ${displayId} on monitor ${monitorIndex} (${isProduction ? 'prod' : 'dev'})`);
 
-  const child = spawn(pnpmCmd, [
-    '--filter', '@screen-commander/player', 'dev',
-    '--', '--display-id', displayId,
-    '--monitor-index', String(monitorIndex),
-    '--backend-url', `http://127.0.0.1:${process.env['PORT'] ?? '3000'}`,
-  ], {
-    cwd: projectRoot,
-    stdio: 'ignore',
-    detached: false,
-    shell: true,
-  });
+  let child: ChildProcess;
+
+  if (isProduction) {
+    // Production: launch electron directly with the built player
+    const electronExe = findElectronExe();
+    const playerMain = join(projectRoot, 'packages', 'player', 'dist', 'main', 'index.js');
+
+    logger.info(`  Electron: ${electronExe}`);
+    logger.info(`  Player: ${playerMain}`);
+
+    child = spawn(electronExe, [
+      playerMain,
+      '--display-id', displayId,
+      '--monitor-index', String(monitorIndex),
+      '--backend-url', backendUrl,
+    ], {
+      cwd: projectRoot,
+      stdio: 'ignore',
+      detached: false,
+      env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined },
+    });
+  } else {
+    // Dev: use pnpm to run electron-vite dev
+    const pnpmCmd = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
+
+    child = spawn(pnpmCmd, [
+      '--filter', '@screen-commander/player', 'dev',
+      '--', '--display-id', displayId,
+      '--monitor-index', String(monitorIndex),
+      '--backend-url', backendUrl,
+    ], {
+      cwd: projectRoot,
+      stdio: 'ignore',
+      detached: false,
+      shell: true,
+    });
+  }
 
   child.on('error', (err) => {
     logger.error(`Player process error for ${displayId}: ${err.message}`);
@@ -48,7 +98,6 @@ export function killPlayer(displayId: string): void {
   if (child) {
     logger.info(`Killing player for display ${displayId} (pid: ${child.pid})`);
     try {
-      // On Windows, need to kill the entire process tree
       if (process.platform === 'win32' && child.pid) {
         spawn('taskkill', ['/pid', String(child.pid), '/f', '/t'], { shell: true, stdio: 'ignore' });
       } else {
@@ -60,7 +109,6 @@ export function killPlayer(displayId: string): void {
     playerProcesses.delete(displayId);
   }
 
-  // Also send shutdown via WebSocket in case the process was started externally
   try {
     const { getIO } = require('../ws/gateway');
     const io = getIO();
