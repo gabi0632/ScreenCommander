@@ -43,9 +43,13 @@ export async function updateTickerConfig(input: UpdateTickerConfigInput): Promis
   if (input.showClock !== undefined) data['showClock'] = input.showClock;
   if (input.clockPosition !== undefined) data['clockPosition'] = input.clockPosition;
   if (input.targetDisplayIds !== undefined) {
-    data['targetDisplayIds'] = Array.isArray(input.targetDisplayIds)
-      ? JSON.stringify(input.targetDisplayIds)
-      : input.targetDisplayIds;
+    if (input.targetDisplayIds === 'all') {
+      data['targetDisplayIds'] = 'all';
+    } else if (Array.isArray(input.targetDisplayIds)) {
+      data['targetDisplayIds'] = JSON.stringify(input.targetDisplayIds);
+    } else {
+      data['targetDisplayIds'] = input.targetDisplayIds;
+    }
   }
 
   const config = await prisma.tickerConfig.update({
@@ -158,9 +162,15 @@ async function getTargetDisplayIds(config: TickerConfigWithMessages): Promise<st
     const parsed: unknown = JSON.parse(config.targetDisplayIds);
     if (Array.isArray(parsed)) return parsed as string[];
   } catch {
-    // Not valid JSON, treat as "all"
+    // Not valid JSON
   }
-  return [];
+  // Unrecognized format — warn and treat as "all"
+  logger.warn(`Ticker: unrecognized targetDisplayIds "${config.targetDisplayIds}", treating as "all"`);
+  const displays = await prisma.display.findMany({
+    where: { isEnabled: true, isPrimary: false },
+    select: { id: true },
+  });
+  return displays.map((d) => d.id);
 }
 
 async function broadcastTickerToPlayers(config: TickerConfigWithMessages): Promise<void> {

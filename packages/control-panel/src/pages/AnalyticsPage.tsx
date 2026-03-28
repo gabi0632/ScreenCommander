@@ -10,7 +10,9 @@ import {
   useActivity,
   usePlayHistory,
 } from '../hooks/useAnalytics';
+import { useDisplays } from '../hooks/useDisplays';
 import { Card } from '../components/ui/Card';
+import { contentTypeLabels } from '../lib/constants';
 import './AnalyticsPage.css';
 
 const CHART_COLORS = ['#00d4aa', '#3b8df6', '#a97cf8', '#ffb020', '#ff4d6a', '#6dd5ed', '#ee9ca7'];
@@ -21,6 +23,9 @@ export default function AnalyticsPage() {
   const { data: contentUsage } = useContentUsage();
   const { data: activity } = useActivity();
   const { data: history } = usePlayHistory();
+  const { data: displays } = useDisplays();
+
+  const displayNameMap = new Map(displays?.map((d) => [d.id, d.name]));
 
   const summaryCards = [
     { label: 'מסכים פעילים', value: summary?.totalActiveDisplays ?? 0, accent: true },
@@ -123,7 +128,7 @@ export default function AnalyticsPage() {
                       flexShrink: 0,
                     }} />
                     <span style={{ color: 'var(--text-secondary)' }}>
-                      {item.contentType} ({item.percentage}%)
+                      {contentTypeLabels[item.contentType] ?? item.contentType} ({item.percentage}%)
                     </span>
                   </div>
                 ))}
@@ -186,8 +191,8 @@ export default function AnalyticsPage() {
               <tbody>
                 {history.map((h) => (
                   <tr key={h.id}>
-                    <td>{h.displayId}</td>
-                    <td>{h.contentType}</td>
+                    <td>{displayNameMap.get(h.displayId) ?? h.displayId}</td>
+                    <td>{contentTypeLabels[h.contentType] ?? h.contentType}</td>
                     <td className="text-mono" style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', direction: 'ltr', textAlign: 'left' }}>
                       {h.contentUrl}
                     </td>

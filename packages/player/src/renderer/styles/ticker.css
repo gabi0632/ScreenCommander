@@ -50,24 +50,24 @@
   display: inline-block;
   white-space: nowrap;
   will-change: transform;
-  padding-left: 100%;
-  animation: ticker-scroll linear infinite;
+  animation: ticker-scroll-ltr linear infinite;
   line-height: normal;
 }
 
-@keyframes ticker-scroll {
+/* Text starts off-screen left, moves right, exits off-screen right */
+@keyframes ticker-scroll-ltr {
   0% {
-    transform: translateX(0);
+    transform: translateX(-100%);
   }
   100% {
-    transform: translateX(-100%);
+    transform: translateX(100vw);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .ticker-scroll-content {
     animation: none;
-    padding-left: 16px;
+    padding-right: 16px;
     overflow-x: auto;
   }
 }

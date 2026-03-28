@@ -47,6 +47,17 @@ uploadsRouter.post('/', upload.single('image'), (req, res) => {
 
 // GET /api/uploads/:filename — serve uploaded file
 uploadsRouter.get('/:filename', (req, res) => {
-  const filePath = join(UPLOADS_DIR, req.params['filename']!);
-  res.sendFile(filePath);
+  const filename = req.params['filename']!;
+
+  // Reject path traversal attempts
+  if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+    res.status(400).json({ error: 'Invalid filename' });
+    return;
+  }
+
+  res.sendFile(filename, { root: UPLOADS_DIR }, (err) => {
+    if (err) {
+      res.status(404).json({ error: 'File not found' });
+    }
+  });
 });

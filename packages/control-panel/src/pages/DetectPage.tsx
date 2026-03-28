@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { useMonitors, useScanMonitors } from '../hooks/useMonitors';
 import { useDisplays, useCreateDisplay, useDeleteDisplay } from '../hooks/useDisplays';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Card } from '../components/ui/Card';
+import { Select } from '../components/ui/Select';
 import { useToast } from '../components/ui/Toast';
 import { ConnectionType } from '@screen-commander/shared';
 import './DetectPage.css';
@@ -15,7 +17,16 @@ export default function DetectPage() {
   const deleteDisplay = useDeleteDisplay();
   const { toast } = useToast();
 
+  const [connectionTypes, setConnectionTypes] = useState<Record<number, string>>({});
+
   const activeDisplayIndices = new Set(displays?.map((d) => d.monitorIndex));
+
+  const getConnectionType = (index: number): string =>
+    connectionTypes[index] ?? ConnectionType.HDMI;
+
+  const setConnectionType = (index: number, type: string) => {
+    setConnectionTypes((prev) => ({ ...prev, [index]: type }));
+  };
 
   const handleScan = () => {
     scanMonitors.mutate(undefined, {
@@ -25,12 +36,14 @@ export default function DetectPage() {
   };
 
   const handleAdd = (monitor: { deviceName: string; width: number; height: number; x: number; y: number }, index: number) => {
+    const connType = getConnectionType(index);
+    const isHdmi = connType === ConnectionType.HDMI;
     createDisplay.mutate(
       {
         name: `מסך ${index + 1}`,
         monitorIndex: index,
-        connectionType: ConnectionType.HDMI,
-        portLabel: `HDMI-${index}`,
+        connectionType: connType,
+        portLabel: `${isHdmi ? 'HDMI' : 'DP'}-${index}`,
         width: monitor.width,
         height: monitor.height,
         posX: monitor.x,
@@ -110,15 +123,26 @@ export default function DetectPage() {
                     הסר
                   </Button>
                 ) : (
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    fullWidth
-                    onClick={() => handleAdd(monitor, index)}
-                    disabled={createDisplay.isPending}
-                  >
-                    + הוסף
-                  </Button>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <Select
+                      label="סוג חיבור"
+                      value={getConnectionType(index)}
+                      onChange={(e) => setConnectionType(index, e.target.value)}
+                      options={[
+                        { value: ConnectionType.HDMI, label: 'HDMI' },
+                        { value: ConnectionType.DISPLAY_PORT, label: 'DisplayPort' },
+                      ]}
+                    />
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      fullWidth
+                      onClick={() => handleAdd(monitor, index)}
+                      disabled={createDisplay.isPending}
+                    >
+                      + הוסף
+                    </Button>
+                  </div>
                 )}
               </Card>
             );

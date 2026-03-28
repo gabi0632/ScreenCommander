@@ -16,6 +16,7 @@ export function TransitionWrapper({
   const [currentChildren, setCurrentChildren] = useState<React.ReactNode>(children);
   const [phase, setPhase] = useState<'idle' | 'exit' | 'enter'>('idle');
   const prevKeyRef = useRef(contentKey);
+  const enterTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (contentKey === prevKeyRef.current) {
@@ -37,14 +38,18 @@ export function TransitionWrapper({
       setCurrentChildren(children);
       setPhase('enter');
 
-      const enterTimer = setTimeout(() => {
+      enterTimerRef.current = setTimeout(() => {
         setPhase('idle');
       }, durationMs);
-
-      return () => clearTimeout(enterTimer);
     }, durationMs);
 
-    return () => clearTimeout(exitTimer);
+    return () => {
+      clearTimeout(exitTimer);
+      if (enterTimerRef.current) {
+        clearTimeout(enterTimerRef.current);
+        enterTimerRef.current = null;
+      }
+    };
   }, [contentKey, children, transition, durationMs]);
 
   const getClassName = (): string => {

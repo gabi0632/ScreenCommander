@@ -5,7 +5,6 @@ import type { ActiveOverlay } from '../hooks/useOverlays';
 
 interface OverlayManagerProps {
   overlays: ActiveOverlay[];
-  onExpire: (messageId: string) => void;
   hasActiveTicker?: boolean;
 }
 

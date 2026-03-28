@@ -1,0 +1,43 @@
+.toggle-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.toggle-label--disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.toggle-track {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  border-radius: 11px;
+  border: none;
+  cursor: inherit;
+  transition: background var(--transition-fast);
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.toggle-track--on { background: var(--accent); }
+.toggle-track--off { background: var(--bg-elevated); }
+
+.toggle-thumb {
+  position: absolute;
+  top: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  transition: left var(--transition-fast);
+}
+
+.toggle-thumb--on { left: 20px; background: var(--bg-deep); }
+.toggle-thumb--off { left: 2px; background: var(--text-muted); }
+
+.toggle-text {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}

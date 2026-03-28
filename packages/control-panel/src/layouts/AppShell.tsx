@@ -1,9 +1,11 @@
-import { type ReactNode, useState } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
-import { useDisplays } from '../hooks/useDisplays';
+import { type ReactNode, useState, useCallback } from 'react';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { useDisplays, useReloadAll, useBlackoutAll, useIdentifyDisplay } from '../hooks/useDisplays';
 import { useWebSocket } from '../hooks/useWebSocket';
+import { useHotkeys } from '../hooks/useHotkeys';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
+import { useToast } from '../components/ui/Toast';
 import { SettingsModal } from '../components/modals/SettingsModal';
 import { HotkeysModal } from '../components/modals/HotkeysModal';
 import { DisplayStatus } from '@screen-commander/shared';
@@ -14,6 +16,7 @@ const navItems = [
   { to: '/messages', label: 'הודעות', icon: '✉' },
   { to: '/running-messages', label: 'הודעות רצות', icon: '📰' },
   { to: '/scheduler', label: 'תזמון', icon: '⏱' },
+  { to: '/channels', label: 'ניהול ערוצים', icon: '📡' },
   { to: '/detect', label: 'זיהוי מסכים', icon: '🖥' },
   { to: '/alerts', label: 'התרעות', icon: '🚨' },
 ];
@@ -25,10 +28,52 @@ const systemItems = [
 export function AppShell() {
   const { data: displays } = useDisplays();
   const { connected } = useWebSocket();
+  const navigate = useNavigate();
+  const reloadAll = useReloadAll();
+  const blackoutAll = useBlackoutAll();
+  const identifyDisplay = useIdentifyDisplay();
+  const { toast } = useToast();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [hotkeysOpen, setHotkeysOpen] = useState(false);
 
   const activeCount = displays?.filter((d) => d.status === DisplayStatus.ONLINE || d.status === DisplayStatus.PLAYING).length ?? 0;
+
+  const handleReloadAll = useCallback(() => {
+    reloadAll.mutate(undefined, {
+      onSuccess: () => toast('כל הנגנים רוענו', 'success'),
+      onError: () => toast('שגיאה ברענון', 'error'),
+    });
+  }, [reloadAll, toast]);
+
+  const handleBlackoutAll = useCallback(() => {
+    blackoutAll.mutate(undefined, {
+      onSuccess: () => toast('כל המסכים כובו', 'success'),
+      onError: () => toast('שגיאה בכיבוי', 'error'),
+    });
+  }, [blackoutAll, toast]);
+
+  const handleIdentifyAll = useCallback(() => {
+    const enabledDisplays = displays?.filter((d) => d.isEnabled) ?? [];
+    void Promise.allSettled(enabledDisplays.map((d) => identifyDisplay.mutateAsync(d.id))).then((results) => {
+      const failCount = results.filter((r) => r.status === 'rejected').length;
+      if (failCount > 0) {
+        toast(`זיהוי נכשל עבור ${failCount} מסכים`, 'error');
+      } else {
+        toast('מזהה את כל המסכים', 'info');
+      }
+    });
+  }, [displays, identifyDisplay, toast]);
+
+  useHotkeys([
+    { ctrl: true, shift: true, key: 'd', action: () => navigate('/') },
+    { ctrl: true, shift: true, key: 'm', action: () => navigate('/messages') },
+    { ctrl: true, shift: true, key: 's', action: () => navigate('/scheduler') },
+    { ctrl: true, shift: true, key: 'r', action: handleReloadAll },
+    { ctrl: true, shift: true, key: 'b', action: handleBlackoutAll },
+    { ctrl: true, shift: true, key: 'i', action: handleIdentifyAll },
+    { ctrl: true, key: ',', action: () => setSettingsOpen(true) },
+    { key: 'Escape', action: () => { setSettingsOpen(false); setHotkeysOpen(false); } },
+  ]);
 
   return (
     <div className="app-shell">

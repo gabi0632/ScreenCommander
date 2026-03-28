@@ -74,9 +74,10 @@
 .active-message-text {
   font-size: 0.875rem;
   color: var(--text-primary);
-  white-space: nowrap;
+  word-break: break-word;
+  line-height: 1.5;
+  max-height: 4.5em;
   overflow: hidden;
-  text-overflow: ellipsis;
   margin-bottom: 4px;
 }
 

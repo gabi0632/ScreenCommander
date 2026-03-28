@@ -1,0 +1,294 @@
+/* ═══════════════════════════════════════════
+   Channel Manager — Industrial Control Room
+   ═══════════════════════════════════════════ */
+
+.chm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Toolbar ── */
+.chm-toolbar {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.chm-mode-btn {
+  padding: 6px 16px;
+  font-size: 0.8rem;
+  font-family: var(--font-hebrew);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.chm-mode-btn:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.chm-mode-btn.active {
+  background: rgba(0, 212, 170, 0.1);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── Category groups ── */
+.chm-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.chm-group-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.chm-group-label {
+  font-size: 0.8rem;
+  font-family: var(--font-hebrew);
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.chm-group-count {
+  font-size: 0.65rem;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  background: var(--bg-card);
+  padding: 1px 6px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.chm-group-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.chm-group-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 6px;
+}
+
+/* ── Channel cards ── */
+.chm-card {
+  position: relative;
+  padding: 10px 12px;
+  font-size: 0.82rem;
+  font-family: var(--font-hebrew);
+  text-align: center;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  overflow: hidden;
+}
+
+.chm-card:hover {
+  border-color: var(--accent);
+  background: var(--bg-elevated);
+}
+
+.chm-card--selected {
+  border-color: var(--accent);
+  background: rgba(0, 212, 170, 0.1);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.chm-card--editing {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.chm-card--custom {
+  border-style: dashed;
+}
+
+.chm-card-name {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chm-card-dot {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.chm-card-delete {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  color: var(--text-muted);
+  font-size: 0.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.15s ease;
+}
+
+.chm-card:hover .chm-card-delete {
+  opacity: 1;
+}
+
+.chm-card-delete:hover {
+  background: var(--red);
+  color: #fff;
+}
+
+/* ═══════════════════════════════════════════
+   Panels (Edit / Add) — Card-style forms
+   ═══════════════════════════════════════════ */
+
+.chm-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.chm-panel--add {
+  border-color: var(--border);
+  border-style: dashed;
+}
+
+.chm-panel--add:focus-within {
+  border-color: var(--accent);
+  border-style: solid;
+}
+
+.chm-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: rgba(0, 212, 170, 0.04);
+  border-bottom: 1px solid var(--border);
+}
+
+.chm-panel--add .chm-panel-header {
+  background: transparent;
+}
+
+.chm-panel-title {
+  font-size: 0.8rem;
+  font-family: var(--font-hebrew);
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.chm-panel--add .chm-panel-title {
+  color: var(--text-muted);
+}
+
+.chm-panel-close {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.chm-panel-close:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+.chm-panel-fields {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.chm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.chm-field--wide {
+  grid-column: span 1;
+}
+
+.chm-field-label {
+  font-size: 0.7rem;
+  font-family: var(--font-hebrew);
+  color: var(--text-muted);
+}
+
+.chm-input {
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  font-family: var(--font-hebrew);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  transition: border-color 0.15s ease;
+}
+
+.chm-input--mono {
+  font-family: var(--font-mono);
+  direction: ltr;
+  text-align: left;
+}
+
+.chm-input:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.chm-select {
+  padding: 8px 10px;
+  font-size: 0.85rem;
+  font-family: var(--font-hebrew);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.chm-select:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.chm-panel-actions {
+  display: flex;
+  gap: 8px;
+  padding: 0 16px 14px;
+}

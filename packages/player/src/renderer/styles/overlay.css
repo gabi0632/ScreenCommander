@@ -132,23 +132,54 @@
 
 .emergency-panel__cities {
   flex: 1;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 2px;
   padding: 10px 12px;
   overflow-y: auto;
+  align-content: start;
+}
+
+/* Multi-column for 2 columns */
+.emergency-panel--cols-2 {
+  width: 540px;
+}
+
+.emergency-panel--cols-2 .emergency-panel__cities {
+  grid-template-columns: 1fr 1fr;
+}
+
+/* Multi-column for 3 columns */
+.emergency-panel--cols-3 {
+  width: 780px;
+}
+
+.emergency-panel--cols-3 .emergency-panel__cities {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+/* Keep header and type bar spanning full width */
+.emergency-panel--cols-2 .emergency-panel__type,
+.emergency-panel--cols-3 .emergency-panel__type {
+  margin: 0 12px;
 }
 
 .emergency-panel__city {
-  padding: 10px 14px;
+  padding: 8px 12px;
   background: rgba(255, 255, 255, 0.08);
   border-radius: 6px;
   color: #ffffff;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   text-align: center;
   direction: rtl;
   border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.emergency-panel--cols-2 .emergency-panel__city,
+.emergency-panel--cols-3 .emergency-panel__city {
+  font-size: 15px;
+  padding: 7px 10px;
 }
 
 .emergency-panel__city:nth-child(even) {

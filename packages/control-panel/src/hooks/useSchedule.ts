@@ -16,6 +16,7 @@ interface CreateScheduleInput {
   startTime: string;
   endTime: string | null;
   recurrenceRule: string | null;
+  durationSeconds: number | null;
   priority: number;
 }
 
@@ -27,10 +28,20 @@ export function useCreateScheduleEntry() {
   });
 }
 
+interface UpdateScheduleInput {
+  id: string;
+  startTime?: string;
+  endTime?: string;
+  recurrenceRule?: string;
+  durationSeconds?: number | null;
+  priority?: number;
+  isActive?: boolean;
+}
+
 export function useUpdateScheduleEntry() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, ...data }: { id: string } & Partial<CreateScheduleInput>) =>
+    mutationFn: ({ id, ...data }: UpdateScheduleInput) =>
       api.put<ScheduleEntry>(`/schedule/${id}`, data),
     onSuccess: () => { void qc.invalidateQueries({ queryKey: ['schedule'] }); },
   });

@@ -9,6 +9,7 @@ import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { useToast } from '../components/ui/Toast';
 import { MessagePosition, MessageAnimation, MessagePriority } from '@screen-commander/shared';
+import { positionLabels } from '../lib/constants';
 import './MessagesPage.css';
 
 export default function MessagesPage() {
@@ -229,7 +230,7 @@ export default function MessagesPage() {
                     <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {msg.text}
                     </td>
-                    <td>{msg.position}</td>
+                    <td>{positionLabels[msg.position] ?? msg.position}</td>
                     <td>
                       <Badge
                         variant={

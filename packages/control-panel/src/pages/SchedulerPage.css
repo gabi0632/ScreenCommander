@@ -1,7 +1,12 @@
+/* ═══════════════════════════════════════════════
+   ScreenCommander — Scheduler Page
+   Industrial control-room aesthetic
+   ═══════════════════════════════════════════════ */
+
 .scheduler-page {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 
 .scheduler-header {
@@ -10,14 +15,22 @@
   justify-content: space-between;
 }
 
+/* ── Form Card ── */
 .scheduler-form-card {
-  padding: 24px;
+  padding: 20px;
+}
+
+.scheduler-form-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
 }
 
 .scheduler-form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .scheduler-form-row {
@@ -26,17 +39,559 @@
   gap: 12px;
 }
 
+/* ── Channel picker ── */
+.scheduler-channel-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.scheduler-channel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.scheduler-channel-categories {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.scheduler-category-btn {
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  font-family: var(--font-hebrew);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.scheduler-category-btn:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.scheduler-category-btn.active {
+  background: var(--accent);
+  color: var(--bg-deep);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+.scheduler-channel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.scheduler-channel-btn {
+  padding: 8px 10px;
+  font-size: 0.8rem;
+  font-family: var(--font-hebrew);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scheduler-channel-btn:hover {
+  border-color: var(--accent);
+  background: var(--bg-elevated);
+}
+
+.scheduler-channel-btn.selected {
+  border-color: var(--accent);
+  background: rgba(0, 212, 170, 0.12);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ── Sections ── */
+.scheduler-section {
+  padding: 12px 14px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.scheduler-section--compact {
+  padding: 10px 12px;
+  gap: 8px;
+}
+
+/* ── Datetime labels row — aligned above the two panels ── */
+.scheduler-datetime-labels {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: -8px; /* tighten gap to panels below */
+}
+
+.scheduler-end-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.scheduler-datetime-panels {
+  align-items: stretch;
+}
+
+.scheduler-datetime-panels .dtp-panel {
+  height: 100%;
+}
+
+.scheduler-disabled-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-family: var(--font-hebrew);
+  height: 100%;
+  min-height: 56px;
+}
+
+/* ── Options row (duration + priority side by side) ── */
+.scheduler-options-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.scheduler-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  flex-wrap: wrap;
+  opacity: 0.4;
+  transition: opacity 0.15s ease;
+  cursor: pointer;
+}
+
+.scheduler-option--active {
+  opacity: 1;
+  cursor: default;
+}
+
+.scheduler-option-label {
+  font-size: 0.8rem;
+  font-family: var(--font-hebrew);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.scheduler-option-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ── Compact inline controls ── */
+.scheduler-compact-num {
+  width: 52px;
+  padding: 5px 4px;
+  font-size: 0.9rem;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  text-align: center;
+  direction: ltr;
+  -moz-appearance: textfield;
+}
+
+.scheduler-compact-num::-webkit-inner-spin-button,
+.scheduler-compact-num::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.scheduler-compact-num:focus {
+  border-color: var(--accent);
+  outline: none;
+  color: var(--accent);
+}
+
+.scheduler-compact-num--accent {
+  color: var(--accent);
+}
+
+.scheduler-compact-sel {
+  padding: 5px 8px;
+  font-size: 0.8rem;
+  font-family: var(--font-hebrew);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.scheduler-compact-sel:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.scheduler-compact-sel--time {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--accent);
+  width: 52px;
+  text-align: center;
+}
+
+/* ── Recurrence inline config ── */
+.scheduler-rec-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+}
+
+.scheduler-rec-text {
+  font-size: 0.8rem;
+  font-family: var(--font-hebrew);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.scheduler-rec-colon {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--accent);
+  opacity: 0.6;
+}
+
+/* ── Toggle row (checkboxes) ── */
+.scheduler-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.scheduler-checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════
+   DateTimePicker — Instrument Panel
+   Full-width bar with time | date sections
+   ═══════════════════════════════════════════════ */
+
+.dtp-panel {
+  display: flex;
+  align-items: stretch;
+  direction: ltr;
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: border-color 0.15s ease;
+}
+
+.dtp-panel:focus-within {
+  border-color: var(--accent);
+}
+
+/* Shared cell style for all panel segments */
+.dtp-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  gap: 4px;
+  min-height: 56px;
+}
+
+/* Time cells get the subtle teal tint */
+.dtp-cell--time {
+  background: rgba(0, 212, 170, 0.04);
+}
+
+/* Label cells — just text, centered */
+.dtp-cell--label {
+  padding: 10px 14px;
+}
+
+/* Grow cell to fill remaining space */
+.dtp-cell--grow {
+  flex: 1;
+}
+
+.dtp-section-label {
+  font-size: 0.6rem;
+  font-family: var(--font-hebrew);
+  color: var(--text-muted);
+  letter-spacing: 0.3px;
+  direction: rtl;
+  white-space: nowrap;
+}
+
+.dtp-divider {
+  width: 1px;
+  background: var(--border);
+  align-self: stretch;
+  flex-shrink: 0;
+}
+
+/* ── Time selects ── */
+.dtp-time-display {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.dtp-time-select {
+  width: 50px;
+  padding: 4px 2px;
+  font-size: 1.05rem;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--accent);
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.dtp-time-select:hover {
+  border-color: var(--border);
+  background: var(--bg-card);
+}
+
+.dtp-time-select:focus {
+  border-color: var(--accent);
+  outline: none;
+  background: var(--bg-card);
+}
+
+.dtp-colon {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--accent);
+  opacity: 0.6;
+  line-height: 1;
+}
+
+/* ── Date inputs ── */
+.dtp-date-display {
+  display: flex;
+  align-items: flex-start;
+  gap: 3px;
+}
+
+.dtp-date-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.dtp-date-input {
+  width: 36px;
+  padding: 4px 2px;
+  font-size: 0.9rem;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  text-align: center;
+  direction: ltr;
+  transition: all 0.15s ease;
+  -moz-appearance: textfield;
+}
+
+.dtp-date-input::-webkit-inner-spin-button,
+.dtp-date-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.dtp-date-input--year {
+  width: 50px;
+}
+
+.dtp-date-input:hover {
+  border-color: var(--border);
+  background: var(--bg-card);
+}
+
+.dtp-date-input:focus {
+  border-color: var(--accent);
+  outline: none;
+  background: var(--bg-card);
+  color: var(--accent);
+}
+
+.dtp-date-slash {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  align-self: center;
+  margin-top: 2px;
+  user-select: none;
+}
+
+.dtp-date-hint {
+  font-size: 0.5rem;
+  color: var(--text-muted);
+  font-family: var(--font-hebrew);
+  direction: rtl;
+  opacity: 0.5;
+}
+
+/* (removed unused dtp-value and dtp-accent-text — now using scheduler-compact-* instead) */
+
+/* ═══════════════════════════════════════════════
+   Recurrence Builder
+   ═══════════════════════════════════════════════ */
+
+.scheduler-recurrence-tabs {
+  display: flex;
+  gap: 0;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.scheduler-rec-tab {
+  flex: 1;
+  padding: 9px 12px;
+  font-size: 0.8rem;
+  font-family: var(--font-hebrew);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  border: none;
+  border-left: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.scheduler-rec-tab:first-child {
+  border-left: none;
+}
+
+.scheduler-rec-tab:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+.scheduler-rec-tab.active {
+  background: var(--accent);
+  color: var(--bg-deep);
+  font-weight: 600;
+}
+
+/* ── Day picker ── */
+.scheduler-days-row {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  padding: 8px 0 4px;
+}
+
+.scheduler-day-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-family: var(--font-hebrew);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scheduler-day-btn:hover {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.scheduler-day-btn.active {
+  background: var(--accent);
+  color: var(--bg-deep);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+/* ── Cron preview ── */
+.scheduler-cron-preview {
+  font-size: 0.8rem;
+  color: var(--accent);
+  padding: 8px 12px;
+  background: rgba(0, 212, 170, 0.06);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(0, 212, 170, 0.15);
+  text-align: center;
+  font-family: var(--font-hebrew);
+}
+
+/* ═══════════════════════════════════════════════
+   Timeline
+   ═══════════════════════════════════════════════ */
+
 .scheduler-timeline {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 24px;
+  padding: 20px;
 }
 
 .scheduler-entries {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .scheduler-display-group {
@@ -67,6 +622,11 @@
   background: var(--bg-elevated);
   border-radius: var(--radius-md);
   border-right: 3px solid var(--accent);
+}
+
+.scheduler-entry.expired .scheduler-entry-bar {
+  opacity: 0.5;
+  border-right-color: var(--text-muted);
 }
 
 .scheduler-entry-info {

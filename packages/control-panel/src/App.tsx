@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { ToastProvider } from './components/ui/Toast';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { AppShell } from './layouts/AppShell';
 
 const DashboardPage = lazy(() => import('./pages/DashboardPage'));
@@ -10,6 +11,7 @@ const DetectPage = lazy(() => import('./pages/DetectPage'));
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
 const RunningMessagesPage = lazy(() => import('./pages/RunningMessagesPage'));
 const AlertsPage = lazy(() => import('./pages/AlertsPage'));
+const ChannelsPage = lazy(() => import('./pages/ChannelsPage'));
 
 function LoadingFallback() {
   return (
@@ -29,6 +31,7 @@ function LoadingFallback() {
 export function App() {
   return (
     <ToastProvider>
+      <ErrorBoundary>
       <Routes>
         <Route element={<AppShell />}>
           <Route
@@ -64,6 +67,14 @@ export function App() {
             }
           />
           <Route
+            path="channels"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <ChannelsPage />
+              </Suspense>
+            }
+          />
+          <Route
             path="detect"
             element={
               <Suspense fallback={<LoadingFallback />}>
@@ -87,8 +98,10 @@ export function App() {
               </Suspense>
             }
           />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
+      </ErrorBoundary>
     </ToastProvider>
   );
 }

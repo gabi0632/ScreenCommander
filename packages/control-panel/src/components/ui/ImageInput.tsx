@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { Button } from './Button';
 import { Input } from './Input';
+import { useToast } from './Toast';
 import { api } from '../../lib/api';
 
 interface ImageInputProps {
@@ -12,6 +13,7 @@ interface ImageInputProps {
 export function ImageInput({ value, onChange, label = 'כתובת תמונה (אופציונלי)' }: ImageInputProps) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const { toast } = useToast();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -22,7 +24,7 @@ export function ImageInput({ value, onChange, label = 'כתובת תמונה (א
       const result = await api.uploadImage(file);
       onChange(result.url);
     } catch {
-      // Upload failed silently
+      toast('שגיאה בהעלאת תמונה', 'error');
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = '';

@@ -22,6 +22,56 @@ export async function getAllMessages(): Promise<MessageWithTargets[]> {
   });
 }
 
+let dismissInProgress = false;
+
+export async function autoDismissExpiredMessages(): Promise<void> {
+  if (dismissInProgress) return;
+  dismissInProgress = true;
+
+  try {
+    const messages = await prisma.textMessage.findMany({
+      where: { sentAt: { not: null }, dismissedAt: null },
+      include: { targets: true },
+    });
+
+    const now = Date.now();
+    const expired: string[] = [];
+
+    for (const msg of messages) {
+      if (msg.sentAt) {
+        const expiresAt = msg.sentAt.getTime() + msg.displayDuration * 1000;
+        if (now >= expiresAt) {
+          expired.push(msg.id);
+        }
+      }
+    }
+
+    if (expired.length > 0) {
+      const expiredMessages = messages.filter((m) => expired.includes(m.id));
+      await prisma.textMessage.updateMany({
+        where: { id: { in: expired } },
+        data: { dismissedAt: new Date() },
+      });
+      await prisma.messageTarget.updateMany({
+        where: { messageId: { in: expired }, dismissedAt: null },
+        data: { dismissedAt: new Date() },
+      });
+
+      const io = getIO();
+      for (const msg of expiredMessages) {
+        for (const target of msg.targets) {
+          io.to(`display:${target.displayId}`).emit(WS_EVENTS.OVERLAY_DISMISS, {
+            messageId: msg.id,
+          });
+        }
+        io.to('dashboard').emit(WS_EVENTS.MESSAGE_DISMISSED, { messageId: msg.id });
+      }
+    }
+  } finally {
+    dismissInProgress = false;
+  }
+}
+
 export async function getActiveMessages(): Promise<MessageWithTargets[]> {
   const messages = await prisma.textMessage.findMany({
     where: { sentAt: { not: null }, dismissedAt: null },
@@ -30,47 +80,11 @@ export async function getActiveMessages(): Promise<MessageWithTargets[]> {
   });
 
   const now = Date.now();
-  const active: MessageWithTargets[] = [];
-  const expired: string[] = [];
-
-  for (const msg of messages) {
-    if (msg.sentAt) {
-      const expiresAt = msg.sentAt.getTime() + msg.displayDuration * 1000;
-      if (now >= expiresAt) {
-        expired.push(msg.id);
-      } else {
-        active.push(msg);
-      }
-    }
-  }
-
-  // Auto-dismiss expired messages and emit dismiss events
-  if (expired.length > 0) {
-    const expiredMessages = messages.filter((m) => expired.includes(m.id));
-    await prisma.textMessage.updateMany({
-      where: { id: { in: expired } },
-      data: { dismissedAt: new Date() },
-    });
-    await prisma.messageTarget.updateMany({
-      where: { messageId: { in: expired }, dismissedAt: null },
-      data: { dismissedAt: new Date() },
-    });
-
-    // Emit dismiss events to players and dashboard
-    const io = getIO();
-    const displayIds = new Set<string>();
-    for (const msg of expiredMessages) {
-      for (const target of msg.targets) {
-        displayIds.add(target.displayId);
-        io.to(`display:${target.displayId}`).emit(WS_EVENTS.OVERLAY_DISMISS, {
-          messageId: msg.id,
-        });
-      }
-      io.to('dashboard').emit(WS_EVENTS.MESSAGE_DISMISSED, { messageId: msg.id });
-    }
-  }
-
-  return active;
+  return messages.filter((msg) => {
+    if (!msg.sentAt) return false;
+    const expiresAt = msg.sentAt.getTime() + msg.displayDuration * 1000;
+    return now < expiresAt;
+  });
 }
 
 export async function getMessageById(id: string): Promise<MessageWithTargets | null> {
@@ -147,18 +161,23 @@ function emitOverlay(message: MessageWithTargets): void {
   logger.info(`Message ${message.id} sent to ${message.targets.length} displays`);
 }
 
-export async function dismissMessage(id: string): Promise<TextMessage> {
+export async function dismissMessage(id: string): Promise<MessageWithTargets> {
   const io = getIO();
 
-  const message = await prisma.textMessage.update({
+  await prisma.textMessage.update({
     where: { id },
     data: { dismissedAt: new Date() },
-    include: { targets: true },
   });
 
   await prisma.messageTarget.updateMany({
     where: { messageId: id, dismissedAt: null },
     data: { dismissedAt: new Date() },
+  });
+
+  // Re-fetch with updated targets
+  const message = await prisma.textMessage.findUniqueOrThrow({
+    where: { id },
+    include: { targets: true },
   });
 
   for (const target of message.targets) {
@@ -240,7 +259,7 @@ let cleanupInterval: ReturnType<typeof setInterval> | null = null;
 export function startMessageCleanup(): void {
   if (cleanupInterval) return;
   cleanupInterval = setInterval(() => {
-    void getActiveMessages(); // triggers auto-dismiss logic
+    void autoDismissExpiredMessages();
   }, 10_000);
 }
 

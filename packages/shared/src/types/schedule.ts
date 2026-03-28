@@ -5,6 +5,7 @@ export interface ScheduleEntry {
   startTime: string;
   endTime: string | null;
   recurrenceRule: string | null;
+  durationSeconds: number | null;
   priority: number;
   isActive: boolean;
   createdAt: string;

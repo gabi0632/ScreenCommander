@@ -22,7 +22,7 @@ export function spawnPlayer(displayId: string, monitorIndex: number): void {
     '--filter', '@screen-commander/player', 'dev',
     '--', '--display-id', displayId,
     '--monitor-index', String(monitorIndex),
-    '--backend-url', 'http://127.0.0.1:3000',
+    '--backend-url', `http://127.0.0.1:${process.env['PORT'] ?? '3000'}`,
   ], {
     cwd: projectRoot,
     stdio: 'ignore',

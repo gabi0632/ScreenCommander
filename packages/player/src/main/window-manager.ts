@@ -32,30 +32,42 @@ export function createPlayerWindow(config: PlayerConfig): BrowserWindow {
     autoHideMenuBar: true,
     show: false,
     backgroundColor: '#000000',
-    // Disable minimum size constraints
     minWidth: 0,
     minHeight: 0,
-    // Use content size to match exact resolution
     useContentSize: false,
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
       webviewTag: true,
+      // webSecurity disabled: the file:// renderer needs to call http://localhost backend API (cross-origin)
       webSecurity: false,
       autoplayPolicy: 'no-user-gesture-required',
       preload: join(__dirname, '../preload/index.js'),
+      // sandbox disabled: preload script requires Node.js APIs (contextBridge, ipcRenderer)
       sandbox: false,
-      // Disable zoom to prevent scaling issues
-      zoomFactor: 1.0 / scaleFactor,
+      // No zoomFactor override — let Electron handle DPI scaling natively
     },
   });
 
-  // Override the zoom factor to account for display scaling
-  playerWindow.webContents.setZoomFactor(1.0 / scaleFactor);
-
-  // Allow webview audio
+  // Allow webview audio + block popups + inject cursor hiding into webview guests
   playerWindow.webContents.on('did-attach-webview', (_event, webContents) => {
     webContents.setAudioMuted(false);
+
+    // Block popups from webview content (replaces deprecated 'new-window' event)
+    webContents.setWindowOpenHandler(() => ({ action: 'deny' as const }));
+
+    webContents.on('dom-ready', () => {
+      // Ensure webview content fills the full area
+      webContents.insertCSS('html, body { min-height: 100vh !important; min-width: 100vw !important; }');
+
+      // Hide scrollbars for clean fullscreen display
+      webContents.insertCSS('::-webkit-scrollbar { display: none !important; } html { scrollbar-width: none; }');
+
+      // Hide cursor if configured
+      if (config.noCursor) {
+        webContents.insertCSS('* { cursor: none !important; }');
+      }
+    });
   });
 
   if (config.noCursor) {

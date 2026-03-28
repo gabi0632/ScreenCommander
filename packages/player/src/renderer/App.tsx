@@ -14,7 +14,7 @@ import { useConnectionStatus } from './hooks/useConnectionStatus';
 
 export function App(): React.JSX.Element {
   const { content, transition, transitionDurationMs } = useContentState();
-  const { overlays, dismissOverlay } = useOverlays();
+  const { overlays } = useOverlays();
   const { tickerConfig } = useTicker();
   const { identify, clearIdentify } = useIdentify();
   const { connected } = useConnectionStatus();
@@ -66,7 +66,7 @@ export function App(): React.JSX.Element {
       <StatusIndicator connected={connected} />
 
       {/* Layer 3: Text overlays (non-emergency) */}
-      <OverlayManager overlays={regularOverlays} onExpire={dismissOverlay} hasActiveTicker={tickerActive} />
+      <OverlayManager overlays={regularOverlays} hasActiveTicker={tickerActive} />
 
       {/* Layer 3b: Emergency panel (right edge) */}
       <EmergencyPanel overlays={emergencyOverlays} />

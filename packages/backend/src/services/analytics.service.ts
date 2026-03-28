@@ -58,47 +58,50 @@ export async function getSummary(): Promise<AnalyticsSummary> {
 export async function getUptimeStats(): Promise<UptimeStat[]> {
   const displays = await prisma.display.findMany({
     where: { isEnabled: true },
-    include: {
-      playHistory: {
-        select: { startedAt: true, endedAt: true, durationSec: true },
-      },
-    },
+    select: { id: true, name: true },
   });
 
-  return displays.map((display) => {
-    let totalSeconds = 0;
-    for (const entry of display.playHistory) {
-      if (entry.durationSec !== null) {
-        totalSeconds += entry.durationSec;
-      } else if (entry.endedAt === null) {
-        totalSeconds += (Date.now() - entry.startedAt.getTime()) / 1000;
-      }
+  const stats: UptimeStat[] = [];
+
+  for (const display of displays) {
+    const agg = await prisma.playHistory.aggregate({
+      where: { displayId: display.id, durationSec: { not: null } },
+      _sum: { durationSec: true },
+    });
+
+    // Also account for currently-running entries (no endedAt)
+    const openEntries = await prisma.playHistory.findMany({
+      where: { displayId: display.id, endedAt: null },
+      select: { startedAt: true },
+    });
+
+    let totalSeconds = agg._sum.durationSec ?? 0;
+    for (const entry of openEntries) {
+      totalSeconds += (Date.now() - entry.startedAt.getTime()) / 1000;
     }
 
-    return {
+    stats.push({
       displayId: display.id,
       displayName: display.name,
       uptimeHours: Math.round((totalSeconds / 3600) * 100) / 100,
-    };
-  });
+    });
+  }
+
+  return stats;
 }
 
 export async function getContentUsageStats(): Promise<ContentUsageStat[]> {
-  const history = await prisma.playHistory.findMany({
-    select: { contentType: true },
+  const groups = await prisma.playHistory.groupBy({
+    by: ['contentType'],
+    _count: { contentType: true },
   });
 
-  const counts = new Map<string, number>();
-  for (const entry of history) {
-    counts.set(entry.contentType, (counts.get(entry.contentType) ?? 0) + 1);
-  }
+  const total = groups.reduce((sum, g) => sum + g._count.contentType, 0) || 1;
 
-  const total = history.length || 1;
-
-  return Array.from(counts.entries()).map(([contentType, count]) => ({
-    contentType,
-    count,
-    percentage: Math.round((count / total) * 10000) / 100,
+  return groups.map((g) => ({
+    contentType: g.contentType,
+    count: g._count.contentType,
+    percentage: Math.round((g._count.contentType / total) * 10000) / 100,
   }));
 }
 

@@ -40,6 +40,7 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
 
   const [active, setActive] = useState<Section>('general');
   const [form, setForm] = useState<AppSettings | null>(null);
+  const [confirmReset, setConfirmReset] = useState(false);
 
   useEffect(() => {
     if (settings) setForm({ ...DEFAULT_SETTINGS, ...settings });
@@ -96,9 +97,14 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
   };
 
   const handleReset = () => {
+    if (!confirmReset) {
+      setConfirmReset(true);
+      return;
+    }
     resetSettings.mutate(undefined, {
       onSuccess: () => {
         toast('ההגדרות אופסו', 'success');
+        setConfirmReset(false);
         onClose();
       },
     });
@@ -306,9 +312,25 @@ export function SettingsModal({ open, onClose }: SettingsModalProps) {
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', marginBottom: 8 }}>
                   איפוס כל ההגדרות לערכי ברירת מחדל
                 </p>
-                <Button variant="danger" onClick={handleReset}>
-                  איפוס הגדרות
-                </Button>
+                {confirmReset ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <p style={{ color: 'var(--red)', fontSize: '0.875rem', fontWeight: 500 }}>
+                      האם אתה בטוח? פעולה זו תאפס את כל ההגדרות
+                    </p>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <Button variant="danger" onClick={handleReset}>
+                        אישור איפוס
+                      </Button>
+                      <Button onClick={() => setConfirmReset(false)}>
+                        ביטול
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button variant="danger" onClick={handleReset}>
+                    איפוס הגדרות
+                  </Button>
+                )}
               </div>
             </div>
           )}

@@ -7,9 +7,17 @@ import { logger } from '../utils/logger';
 import { spawnPlayer, killPlayer } from '../utils/player-manager';
 
 // In-memory screenshot storage
+const MAX_SCREENSHOTS = 50;
 const screenshots = new Map<string, string>();
 
 export function storeScreenshot(displayId: string, dataUrl: string): void {
+  // Evict oldest entries if at capacity (and not updating an existing key)
+  if (!screenshots.has(displayId) && screenshots.size >= MAX_SCREENSHOTS) {
+    const oldestKey = screenshots.keys().next().value;
+    if (oldestKey !== undefined) {
+      screenshots.delete(oldestKey);
+    }
+  }
   screenshots.set(displayId, dataUrl);
 }
 
@@ -67,14 +75,17 @@ export async function deleteDisplay(id: string): Promise<Display> {
 }
 
 export async function assignContent(displayId: string, input: AssignContentInput): Promise<Display> {
-  const content = await prisma.content.upsert({
-    where: { id: `${input.contentType}:${input.url}` },
-    create: {
-      type: input.contentType,
-      url: input.url,
-    },
-    update: {},
+  let content = await prisma.content.findFirst({
+    where: { type: input.contentType, url: input.url },
   });
+  if (!content) {
+    content = await prisma.content.create({
+      data: {
+        type: input.contentType,
+        url: input.url,
+      },
+    });
+  }
 
   // End previous play history entry
   await prisma.playHistory.updateMany({

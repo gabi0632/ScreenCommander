@@ -25,9 +25,11 @@ model Display {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  currentContent   Content?   @relation("CurrentContent", fields: [currentContentId], references: [id])
-  currentContentId String?
-  scheduleEntries  ScheduleEntry[]
+  currentContent     Content?   @relation("CurrentContent", fields: [currentContentId], references: [id])
+  currentContentId   String?
+  fallbackContent    Content?   @relation("FallbackContent", fields: [fallbackContentId], references: [id])
+  fallbackContentId  String?
+  scheduleEntries    ScheduleEntry[]
   messageTargets   MessageTarget[]
   playHistory      PlayHistory[]
 }
@@ -38,8 +40,9 @@ model Content {
   url      String
   title    String?
   metadata String?
-  displays         Display[] @relation("CurrentContent")
-  scheduleEntries  ScheduleEntry[]
+  displays           Display[] @relation("CurrentContent")
+  fallbackDisplays   Display[] @relation("FallbackContent")
+  scheduleEntries    ScheduleEntry[]
   createdAt        DateTime  @default(now())
 }
 
@@ -51,9 +54,10 @@ model ScheduleEntry {
   content        Content  @relation(fields: [contentId], references: [id])
   startTime      DateTime
   endTime        DateTime?
-  recurrenceRule String?
-  priority       Int       @default(0)
-  isActive       Boolean   @default(true)
+  recurrenceRule  String?
+  durationSeconds Int?
+  priority        Int       @default(0)
+  isActive        Boolean   @default(true)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 }

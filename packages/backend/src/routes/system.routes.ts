@@ -1,5 +1,8 @@
 import { Router } from 'express';
+import { resolve } from 'path';
 import * as systemService from '../services/system.service';
+import { execPowerShell } from '../utils/powershell';
+import { SCRIPTS_DIR } from '../utils/paths';
 
 export const systemRouter = Router();
 
@@ -26,8 +29,7 @@ systemRouter.post('/scan', async (_req, res, next) => {
 // GET /api/system/audio-devices
 systemRouter.get('/audio-devices', async (_req, res, next) => {
   try {
-    const scriptPath = require('path').resolve(__dirname, '../../../../scripts/get-audio-devices.ps1');
-    const { execPowerShell } = require('../utils/powershell');
+    const scriptPath = resolve(SCRIPTS_DIR, 'get-audio-devices.ps1');
     const output = await execPowerShell(scriptPath);
     const parsed = JSON.parse(output);
     const devices = Array.isArray(parsed) ? parsed : [parsed];
@@ -40,8 +42,7 @@ systemRouter.get('/audio-devices', async (_req, res, next) => {
 // GET /api/system/display-audio-map — maps each display to its HDMI/DP audio endpoint
 systemRouter.get('/display-audio-map', async (_req, res, next) => {
   try {
-    const scriptPath = require('path').resolve(__dirname, '../../../../scripts/get-display-audio-map.ps1');
-    const { execPowerShell } = require('../utils/powershell');
+    const scriptPath = resolve(SCRIPTS_DIR, 'get-display-audio-map.ps1');
     const output = await execPowerShell(scriptPath);
     const parsed = JSON.parse(output);
     const entries = Array.isArray(parsed) ? parsed : [parsed];

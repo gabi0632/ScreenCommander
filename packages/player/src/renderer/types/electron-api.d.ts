@@ -9,6 +9,9 @@ interface ElectronAPI {
   onDisplayIdentify: (callback: Listener) => CleanupFn;
   onGetPlayerState: (callback: Listener) => CleanupFn;
   onConnectionStatusChange: (callback: Listener) => CleanupFn;
+  onTickerUpdate: (callback: Listener) => CleanupFn;
+  onTickerClear: (callback: Listener) => CleanupFn;
+  reportRendererReady: () => void;
   reportContentLoaded: (url: string, loadTimeMs: number) => void;
   reportOverlayExpired: (messageId: string) => void;
   reportError: (error: string, stack?: string) => void;

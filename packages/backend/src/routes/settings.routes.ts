@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { appSettingsSchema } from '@screen-commander/shared';
+import { appSettingsSchema, importSettingsSchema } from '@screen-commander/shared';
 import { validate } from '../middleware/validate';
 import * as settingsService from '../services/settings.service';
 
@@ -36,7 +36,7 @@ settingsRouter.post('/export', async (_req, res, next) => {
 });
 
 // POST /api/settings/import
-settingsRouter.post('/import', async (req, res, next) => {
+settingsRouter.post('/import', validate(importSettingsSchema), async (req, res, next) => {
   try {
     const settings = await settingsService.importSettings(req.body);
     res.json(settings);

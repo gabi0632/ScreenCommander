@@ -43,7 +43,14 @@
       "WebFetch(domain:www.npmjs.com)",
       "WebFetch(domain:api.tzevaadom.co.il)",
       "Bash(pnpm --filter backend add ws)",
-      "Bash(pnpm --filter backend add -D @types/ws)"
+      "Bash(pnpm --filter backend add -D @types/ws)",
+      "Bash(pnpm --filter control-panel build)",
+      "Bash(pnpm --filter control-panel tsc --noEmit)",
+      "Bash(npx tsc:*)",
+      "Bash(powershell -Command \"Get-CimInstance Win32_Process -Filter \\\\\"Name='node.exe'\\\\\" | Where-Object { \\\\$_.CommandLine -like '*tsx*watch*' } | ForEach-Object { Stop-Process -Id \\\\$_.ProcessId -Force }; Write-Host 'Killed backend processes'\" 2>&1)",
+      "Bash(npx prisma:*)",
+      "Bash(powershell -Command \"Get-CimInstance Win32_Process -Filter \\\\\"Name='node.exe'\\\\\" | Where-Object { \\\\$_.CommandLine -like '*tsx*watch*' } | ForEach-Object { Stop-Process -Id \\\\$_.ProcessId -Force }; Write-Host 'Done'\" 2>&1)",
+      "Bash(powershell -Command \"Get-CimInstance Win32_Process -Filter \\\\\"Name='node.exe'\\\\\" | Where-Object { \\\\$_.CommandLine -like '*tsx*watch*' } | ForEach-Object { Stop-Process -Id \\\\$_.ProcessId -Force }; Write-Host 'Killed'\" 2>&1)"
     ]
   }
 }

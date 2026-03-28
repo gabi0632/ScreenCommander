@@ -144,6 +144,7 @@ async function handleAlert(alert: OrefAlert): Promise<void> {
 }
 
 async function pollAlerts(): Promise<void> {
+  if (!isRunning) return;
   try {
     const response = await fetch(OREF_URL, { headers: OREF_HEADERS });
 

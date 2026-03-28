@@ -25,12 +25,11 @@ html, body {
   background: #000;
 }
 
-webview, iframe, img, video {
+iframe, img, video {
   display: block;
   width: 100%;
   height: 100%;
   border: none;
   margin: 0;
   padding: 0;
-  object-fit: cover;
 }

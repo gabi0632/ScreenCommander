@@ -37,3 +37,9 @@ export const appSettingsSchema = z.object({
 });
 
 export type AppSettingsInput = z.infer<typeof appSettingsSchema>;
+
+export const importSettingsSchema = z.object({
+  settings: appSettingsSchema,
+  version: z.string().optional(),
+  exportedAt: z.string().optional(),
+});

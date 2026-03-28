@@ -15,21 +15,15 @@ export function WebViewContent({ url }: WebViewContentProps): React.JSX.Element 
     const webview = webviewRef.current;
     if (!webview) return;
 
-    const handleNewWindow = (event: Event) => {
-      event.preventDefault();
-    };
-
     const handleWillNavigate = (event: Event & { url?: string }) => {
       if (event.url && isJavaScriptUrl(event.url)) {
         event.preventDefault();
       }
     };
 
-    webview.addEventListener('new-window', handleNewWindow);
     webview.addEventListener('will-navigate', handleWillNavigate as EventListener);
 
     return () => {
-      webview.removeEventListener('new-window', handleNewWindow);
       webview.removeEventListener('will-navigate', handleWillNavigate as EventListener);
     };
   }, []);
@@ -52,11 +46,14 @@ export function WebViewContent({ url }: WebViewContentProps): React.JSX.Element 
   }
 
   return (
-    <webview
-      ref={webviewRef as React.RefObject<HTMLWebViewElement>}
-      src={url}
-      style={{ width: '100%', height: '100%' }}
-      sandbox="true"
-    />
+    <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <webview
+        ref={webviewRef as React.RefObject<HTMLWebViewElement>}
+        src={url}
+        style={{ flex: '1 1 auto', display: 'flex', width: '100%', border: 'none' }}
+        // @ts-expect-error -- Electron webview uses webpreferences attribute, not sandbox
+        webpreferences="sandbox=yes"
+      />
+    </div>
   );
 }

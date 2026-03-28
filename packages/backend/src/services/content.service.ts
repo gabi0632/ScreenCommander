@@ -24,6 +24,9 @@ export async function createContent(input: CreateContentInput): Promise<Content>
 }
 
 export async function deleteContent(id: string): Promise<Content> {
+  // Delete related schedule entries referencing this content
+  await prisma.scheduleEntry.deleteMany({ where: { contentId: id } });
+
   // Unlink any displays currently showing this content
   await prisma.display.updateMany({
     where: { currentContentId: id },

@@ -62,8 +62,14 @@ export function useOverlays(): UseOverlaysResult {
         return [...trimmed, overlay];
       });
 
-      // Auto-expire timer
+      // Auto-expire timer — clear any existing timer for this message first (e.g. on resend)
       if (data.displayDurationSeconds > 0) {
+        const existingTimer = timersRef.current.get(data.messageId);
+        if (existingTimer) {
+          clearTimeout(existingTimer);
+          timersRef.current.delete(data.messageId);
+        }
+
         const timer = setTimeout(() => {
           dismissOverlay(data.messageId);
         }, data.displayDurationSeconds * 1000);

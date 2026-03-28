@@ -11,6 +11,7 @@ import { initAutoRecovery } from './auto-recovery';
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 
 let config: PlayerConfig;
+let screenshotTimer: ReturnType<typeof setInterval> | null = null;
 
 try {
   config = parseCliArgs(process.argv);
@@ -61,7 +62,7 @@ app.whenReady().then(() => {
 });
 
 function startScreenshotCapture(win: Electron.BrowserWindow): void {
-  setInterval(async () => {
+  screenshotTimer = setInterval(async () => {
     try {
       if (win.isDestroyed()) return;
       const image = await win.webContents.capturePage();
@@ -92,7 +93,11 @@ function registerIpcHandlers(): void {
 
   // Renderer requests config
   ipcMain.handle('get-config', () => {
-    return config;
+    // Convert ws:// to http:// so renderer can make REST calls to the backend
+    const httpBackendUrl = config.backendUrl
+      .replace('ws://', 'http://')
+      .replace('wss://', 'https://');
+    return { ...config, backendUrl: httpBackendUrl };
   });
 
   // Renderer reports it has mounted and is ready to receive state
@@ -103,12 +108,20 @@ function registerIpcHandlers(): void {
 }
 
 app.on('window-all-closed', () => {
+  if (screenshotTimer) {
+    clearInterval(screenshotTimer);
+    screenshotTimer = null;
+  }
   destroyHeartbeat();
   destroyWebSocket();
   app.quit();
 });
 
 app.on('before-quit', () => {
+  if (screenshotTimer) {
+    clearInterval(screenshotTimer);
+    screenshotTimer = null;
+  }
   destroyHeartbeat();
   destroyWebSocket();
 });
