@@ -1,0 +1,141 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Display {
+  id           String    @id @default(cuid())
+  hardwareId   String    @unique
+  name         String
+  monitorIndex Int
+  width        Int
+  height       Int
+  posX         Int
+  posY         Int
+  isPrimary    Boolean   @default(false)
+  isEnabled    Boolean   @default(true)
+  connectionType String  @default("HDMI")
+  portLabel    String    @default("HDMI-1")
+  audioDeviceId String?
+  status       String    @default("OFFLINE")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  currentContent   Content?   @relation("CurrentContent", fields: [currentContentId], references: [id])
+  currentContentId String?
+  scheduleEntries  ScheduleEntry[]
+  messageTargets   MessageTarget[]
+  playHistory      PlayHistory[]
+}
+
+model Content {
+  id       String  @id @default(cuid())
+  type     String
+  url      String
+  title    String?
+  metadata String?
+  displays         Display[] @relation("CurrentContent")
+  scheduleEntries  ScheduleEntry[]
+  createdAt        DateTime  @default(now())
+}
+
+model ScheduleEntry {
+  id             String   @id @default(cuid())
+  displayId      String
+  display        Display  @relation(fields: [displayId], references: [id])
+  contentId      String
+  content        Content  @relation(fields: [contentId], references: [id])
+  startTime      DateTime
+  endTime        DateTime?
+  recurrenceRule String?
+  priority       Int       @default(0)
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model TextMessage {
+  id               String           @id @default(cuid())
+  text             String           @default("")
+  imageUrl         String?
+  imageSize        Int              @default(50)
+  position         String           @default("bottom")
+  fontSize         Int              @default(24)
+  fontColor        String           @default("#FFFFFF")
+  backgroundColor  String           @default("#000000CC")
+  animation        String           @default("fade-in")
+  displayDuration  Int              @default(30)
+  priority         String           @default("normal")
+  source           String           @default("manual")
+  scheduledAt      DateTime?
+  sentAt           DateTime?
+  dismissedAt      DateTime?
+  createdAt        DateTime         @default(now())
+  targets          MessageTarget[]
+}
+
+model MessageTarget {
+  id           String      @id @default(cuid())
+  messageId    String
+  message      TextMessage @relation(fields: [messageId], references: [id])
+  displayId    String
+  display      Display     @relation(fields: [displayId], references: [id])
+  deliveredAt  DateTime?
+  dismissedAt  DateTime?
+}
+
+model PlayHistory {
+  id          String   @id @default(cuid())
+  displayId   String
+  display     Display  @relation(fields: [displayId], references: [id])
+  contentUrl  String
+  contentType String
+  startedAt   DateTime @default(now())
+  endedAt     DateTime?
+  durationSec Int?
+}
+
+model AppSettings {
+  id    String @id @default("singleton")
+  data  String
+}
+
+model Favorite {
+  id    String @id @default(cuid())
+  name  String
+  url   String
+  type  String
+  icon  String @default("")
+  order Int    @default(0)
+}
+
+model TickerConfig {
+  id               String          @id @default("singleton")
+  isEnabled        Boolean         @default(false)
+  backgroundColor  String          @default("#cc0000")
+  textColor        String          @default("#ffffff")
+  fontSize         Int             @default(28)
+  speed            Int             @default(5)
+  separator        String          @default(" ■ ")
+  showClock        Boolean         @default(true)
+  clockPosition    String          @default("left")
+  targetDisplayIds String          @default("all")
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  messages         TickerMessage[]
+}
+
+model TickerMessage {
+  id        String       @id @default(cuid())
+  text      String
+  order     Int          @default(0)
+  isActive  Boolean      @default(true)
+  configId  String       @default("singleton")
+  config    TickerConfig @relation(fields: [configId], references: [id])
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+}

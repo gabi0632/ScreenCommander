@@ -1,0 +1,76 @@
+.scheduler-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.scheduler-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.scheduler-form-card {
+  padding: 24px;
+}
+
+.scheduler-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.scheduler-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.scheduler-timeline {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+}
+
+.scheduler-entries {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.scheduler-display-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.scheduler-display-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.scheduler-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.scheduler-entry-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-md);
+  border-right: 3px solid var(--accent);
+}
+
+.scheduler-entry-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}

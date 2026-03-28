@@ -1,0 +1,86 @@
+.sc-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.sc-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sc-button--primary {
+  background: var(--accent);
+  color: var(--bg-deep);
+  border-color: var(--accent);
+}
+
+.sc-button--primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  box-shadow: 0 0 16px var(--accent-glow);
+}
+
+.sc-button--secondary {
+  background: var(--bg-card);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+
+.sc-button--secondary:hover:not(:disabled) {
+  background: var(--bg-elevated);
+  border-color: var(--text-muted);
+}
+
+.sc-button--danger {
+  background: var(--red);
+  color: #fff;
+  border-color: var(--red);
+}
+
+.sc-button--danger:hover:not(:disabled) {
+  background: #ff6680;
+  box-shadow: 0 0 16px var(--red-glow);
+}
+
+.sc-button--ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border-color: transparent;
+}
+
+.sc-button--ghost:hover:not(:disabled) {
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+.sc-button--sm {
+  padding: 4px 10px;
+  font-size: 0.8125rem;
+}
+
+.sc-button--lg {
+  padding: 12px 24px;
+  font-size: 1rem;
+}
+
+.sc-button--icon {
+  padding: 8px;
+  min-width: 36px;
+  min-height: 36px;
+}
+
+.sc-button--full {
+  width: 100%;
+}

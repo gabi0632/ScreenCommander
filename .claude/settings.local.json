@@ -1,0 +1,49 @@
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(npm --version)",
+      "Bash(pnpm --filter @screen-commander/control-panel dev)",
+      "Bash(curl -sI \"http://localhost:5173/src/components/modals/SettingsModal.tsx\")",
+      "Bash(curl -sI \"http://localhost:5173/src/components/modals/HotkeysModal.tsx\")",
+      "Bash(pnpm --filter @screen-commander/shared build)",
+      "Bash(pnpm --filter @screen-commander/backend typecheck)",
+      "Bash(taskkill //F //FI \"WINDOWTITLE eq *screen-commander*\")",
+      "Bash(taskkill //F //IM \"node.exe\")",
+      "Bash(pnpm --filter @screen-commander/backend dev)",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(powershell -Command \"Stop-Process -Name 'electron' -Force -ErrorAction SilentlyContinue; Write-Host 'done'\" 2>&1)",
+      "Bash(powershell -Command \"Stop-Process -Name ''electron'' -Force -ErrorAction SilentlyContinue\")",
+      "Bash(pnpm --filter @screen-commander/player dev -- --display-id cmn600fdj00003udsn50163sy --monitor-index 1 --backend-url ws://localhost:3000)",
+      "Bash(pnpm --filter @screen-commander/player dev -- --display-id cmn600fdj00003udsn50163sy --monitor-index 1 --backend-url http://localhost:3000)",
+      "Bash(DISPLAY_ID=cmn600fdj00003udsn50163sy MONITOR_INDEX=1 BACKEND_URL=http://localhost:3000 pnpm --filter @screen-commander/player dev -- --display-id cmn600fdj00003udsn50163sy --monitor-index 1 --backend-url http://localhost:3000)",
+      "Bash(powershell -Command \"Get-Process -Name 'electron*' -ErrorAction SilentlyContinue | Select-Object Id\" 2>&1)",
+      "Bash(node:*)",
+      "WebSearch",
+      "WebFetch(domain:github.com)",
+      "Bash(pnpm --filter @screen-commander/player add ws @types/ws)",
+      "Bash(DISPLAY_ID=cmn600fdj00003udsn50163sy MONITOR_INDEX=1 BACKEND_URL=http://127.0.0.1:3000 pnpm --filter @screen-commander/player dev -- --display-id cmn600fdj00003udsn50163sy --monitor-index 1 --backend-url http://127.0.0.1:3000)",
+      "Bash(grep -n \"window\\\\.electronAPI\\\\.\" packages/player/src/renderer/hooks/*.ts packages/player/src/renderer/App.tsx)",
+      "Bash(curl -s -X POST http://127.0.0.1:3000/api/displays/cmn600fdj00003udsn50163sy/content -H \"Content-Type: application/json\" -d '{\"\"\"\"contentType\"\"\"\":\"\"\"\"HLS_STREAM\"\"\"\",\"\"\"\"url\"\"\"\":\"\"\"\"https://kancdn.medonecdn.net/livehls/oil/kancdn-live/live/kan11/live.livx/playlist.m3u8\"\"\"\",\"\"\"\"transition\"\"\"\":\"\"\"\"cut\"\"\"\",\"\"\"\"transitionDurationMs\"\"\"\":0}')",
+      "Bash(curl -sI \"https://dsk76kvc9kie6.cloudfront.net/media/cdefce3a-14ec-46cc-a147-1275c4a8b9ed/mainManifest.m3u8\")",
+      "Bash(curl:*)",
+      "Bash(node -e \"process.stdin.on\\(''''data'''',d=>console.log\\(''''sent''''\\)\\)\")",
+      "WebFetch(domain:gist.github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:iptvcat.net)",
+      "Bash(pnpm --filter @screen-commander/backend add multer @types/multer)",
+      "Bash(pnpm --filter @screen-commander/control-panel typecheck)",
+      "WebFetch(domain:iptv-org.github.io)",
+      "WebFetch(domain:iptvcat.org)",
+      "Bash(python3 .claude/skills/ui-ux-pro-max/scripts/search.py \"tv streaming dashboard control room dark industrial\" --design-system -p \"ScreenCommander\")",
+      "WebFetch(domain:www.tzevaadom.co.il)",
+      "Bash(grep -r WS_EVENTSs*= /c/Users/Kahlon/Desktop/ScreenCommander/packages/shared/src --include=*.ts)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:api.tzevaadom.co.il)",
+      "Bash(pnpm --filter backend add ws)",
+      "Bash(pnpm --filter backend add -D @types/ws)"
+    ]
+  }
+}

@@ -1,0 +1,209 @@
+.overlay-container {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+  padding: 16px;
+}
+
+.overlay-container--top {
+  top: 0;
+}
+
+.overlay-container--bottom {
+  bottom: 0;
+}
+
+.overlay-container--center {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.overlay-container--ticker {
+  bottom: 0;
+  padding: 0;
+}
+
+.text-overlay {
+  max-width: 90%;
+  padding: 16px 32px;
+  border-radius: 8px;
+  text-align: center;
+  word-wrap: break-word;
+  pointer-events: auto;
+  backdrop-filter: blur(8px);
+}
+
+.text-overlay--ticker {
+  max-width: 100%;
+  width: 100%;
+  border-radius: 0;
+  text-align: left;
+  padding: 12px 24px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.text-overlay--urgent {
+  border: 2px solid #ffb020;
+  box-shadow: 0 0 20px rgba(255, 176, 32, 0.15);
+}
+
+.text-overlay--emergency {
+  border: 3px solid #ff4d6a;
+  box-shadow:
+    0 0 30px rgba(255, 77, 106, 0.3),
+    0 0 60px rgba(255, 77, 106, 0.15),
+    inset 0 0 30px rgba(255, 77, 106, 0.05);
+  animation: emergency-pulse 1.2s ease-in-out infinite;
+  position: relative;
+}
+
+/* ── Emergency Panel (right-edge, full height — like TV news) ── */
+.emergency-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 280px;
+  height: 100%;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  pointer-events: auto;
+  background: linear-gradient(180deg, #0d1a3a 0%, #0a1228 100%);
+  border-left: 3px solid #ff2d55;
+  box-shadow:
+    -8px 0 32px rgba(0, 0, 0, 0.5),
+    -2px 0 8px rgba(255, 45, 85, 0.15);
+}
+
+.emergency-panel__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 16px 12px;
+  background: linear-gradient(180deg, rgba(255, 45, 85, 0.15) 0%, transparent 100%);
+}
+
+.emergency-panel__siren {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 45, 85, 0.2);
+  border: 2px solid rgba(255, 45, 85, 0.4);
+  margin-bottom: 8px;
+  animation: emergency-siren-pulse 1.5s ease-in-out infinite;
+}
+
+.emergency-panel__title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+  text-align: center;
+  direction: rtl;
+}
+
+.emergency-panel__subtitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+  direction: rtl;
+}
+
+.emergency-panel__type {
+  margin: 0 12px;
+  padding: 8px 12px;
+  background: #ff2d55;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+  direction: rtl;
+  border-radius: 6px;
+}
+
+.emergency-panel__cities {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  overflow-y: auto;
+}
+
+.emergency-panel__city {
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  direction: rtl;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.emergency-panel__city:nth-child(even) {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.emergency-panel__edge {
+  position: absolute;
+  top: 0;
+  left: -3px;
+  width: 3px;
+  height: 100%;
+  background: #ff2d55;
+  animation: emergency-edge-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes emergency-siren-pulse {
+  0%, 100% {
+    background: rgba(255, 45, 85, 0.2);
+    box-shadow: 0 0 12px rgba(255, 45, 85, 0.2);
+  }
+  50% {
+    background: rgba(255, 45, 85, 0.35);
+    box-shadow: 0 0 24px rgba(255, 45, 85, 0.4);
+  }
+}
+
+@keyframes emergency-edge-pulse {
+  0%, 100% {
+    box-shadow: -4px 0 12px rgba(255, 45, 85, 0.3);
+  }
+  50% {
+    box-shadow: -6px 0 20px rgba(255, 45, 85, 0.6);
+  }
+}
+
+/* legacy fallback for non-emergency */
+@keyframes emergency-pulse {
+  0%, 100% {
+    border-color: #ff4d6a;
+    box-shadow:
+      0 0 30px rgba(255, 77, 106, 0.3),
+      0 0 60px rgba(255, 77, 106, 0.15),
+      inset 0 0 30px rgba(255, 77, 106, 0.05);
+  }
+  50% {
+    border-color: #ff1a3d;
+    box-shadow:
+      0 0 40px rgba(255, 77, 106, 0.5),
+      0 0 80px rgba(255, 77, 106, 0.25),
+      inset 0 0 40px rgba(255, 77, 106, 0.08);
+  }
+}
+
+@keyframes pulse-border {
+  0%, 100% { border-color: #ff4d6a; }
+  50% { border-color: #ff4d6a88; }
+}
