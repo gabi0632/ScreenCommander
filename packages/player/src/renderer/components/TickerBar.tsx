@@ -37,7 +37,7 @@ export function TickerBar({ config }: TickerBarProps): React.JSX.Element | null 
     // scrollWidth includes the padding-left (100% of parent) + text width
     const totalWidth = el.scrollWidth;
     const pixelsPerSecond = speed * 15;
-    const duration = Math.max(5, totalWidth / pixelsPerSecond);
+    const duration = Math.max(10, totalWidth / pixelsPerSecond);
     setAnimDuration(duration);
   }, [speed]);
 
