@@ -40,8 +40,8 @@ WshShell.Environment("Process")("DATABASE_URL") = "file:" & projectRoot & "\pack
 ' Start backend (hidden)
 WshShell.Run """" & nodeExe & """ """ & backendScript & """", 0, False
 
-' Wait for backend
-WScript.Sleep 5000
+' Wait for backend and players to start
+WScript.Sleep 15000
 
-' Start kiosk (hidden)
-WshShell.Run """" & electronExe & """ """ & kioskScript & """", 0, False
+' Start kiosk
+WshShell.Run """" & electronExe & """ """ & kioskScript & """", 1, False

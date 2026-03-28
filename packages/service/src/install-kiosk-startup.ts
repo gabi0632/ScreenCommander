@@ -68,11 +68,11 @@ function main(): void {
     "' Start the backend server (hidden window, don't wait)",
     `WshShell.Run """${nodeExe}"" ""${backendScript}""", 0, False`,
     "",
-    "' Wait for the backend to start",
-    "WScript.Sleep 5000",
+    "' Wait for the backend and players to start",
+    "WScript.Sleep 15000",
     "",
-    "' Start the kiosk electron app (hidden window, don't wait)",
-    `WshShell.Run """${electronExe}"" ""${kioskMainScript}""", 0, False`,
+    "' Start the kiosk electron app",
+    `WshShell.Run """${electronExe}"" ""${kioskMainScript}""", 1, False`,
     "",
   ].join('\r\n');
 
