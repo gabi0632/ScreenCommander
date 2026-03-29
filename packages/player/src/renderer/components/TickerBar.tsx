@@ -12,12 +12,19 @@ const clockFormatter = new Intl.DateTimeFormat('he-IL', {
   hour12: false,
 });
 
+const dateFormatter = new Intl.DateTimeFormat('he-IL', {
+  weekday: 'short',
+  day: '2-digit',
+  month: '2-digit',
+});
+
 export function TickerBar({ config }: TickerBarProps): React.JSX.Element | null {
   const { backgroundColor, textColor, fontSize, speed, separator, showClock, clockPosition, messages } = config;
 
   const activeMessages = messages.filter((m) => m.isActive);
 
   const [time, setTime] = useState(() => clockFormatter.format(new Date()));
+  const [date, setDate] = useState(() => dateFormatter.format(new Date()));
   const scrollRef = useRef<HTMLDivElement>(null);
   const [animDuration, setAnimDuration] = useState(20);
 
@@ -25,7 +32,9 @@ export function TickerBar({ config }: TickerBarProps): React.JSX.Element | null 
   useEffect(() => {
     if (!showClock) return;
     const interval = setInterval(() => {
-      setTime(clockFormatter.format(new Date()));
+      const now = new Date();
+      setTime(clockFormatter.format(now));
+      setDate(dateFormatter.format(now));
     }, 1000);
     return () => clearInterval(interval);
   }, [showClock]);
@@ -64,7 +73,8 @@ export function TickerBar({ config }: TickerBarProps): React.JSX.Element | null 
       className={`ticker-clock ${clockPosition === 'right' ? 'ticker-clock--right' : 'ticker-clock--left'}`}
       style={{ backgroundColor, color: textColor, fontSize: `${fontSize}px` }}
     >
-      {time}
+      <div className="ticker-clock-time">{time}</div>
+      <div className="ticker-clock-date">{date}</div>
     </div>
   ) : null;
 

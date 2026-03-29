@@ -7,6 +7,60 @@ import { getIO } from '../ws/gateway';
 import { logger } from '../utils/logger';
 
 let schedulerTask: cron.ScheduledTask | null = null;
+const durationTimers = new Map<string, NodeJS.Timeout>();
+
+/**
+ * Restore previous (fallback) content for a display after a scheduled duration expires.
+ */
+async function restoreContent(displayId: string, entryId: string): Promise<void> {
+  durationTimers.delete(entryId);
+
+  const display = await prisma.display.findUnique({
+    where: { id: displayId },
+    include: { fallbackContent: true },
+  });
+
+  if (!display) return;
+
+  const io = getIO();
+
+  if (display.fallbackContentId && display.fallbackContent) {
+    await prisma.display.update({
+      where: { id: displayId },
+      data: {
+        currentContentId: display.fallbackContentId,
+        fallbackContentId: null,
+      },
+    });
+
+    io.to(`display:${displayId}`).emit(WS_EVENTS.CONTENT_CHANGE, {
+      contentType: display.fallbackContent.type,
+      url: display.fallbackContent.url,
+      transition: 'fade',
+      transitionDurationMs: 500,
+    });
+
+    io.to('dashboard').emit(WS_EVENTS.CONTENT_CHANGED, {
+      displayId,
+      contentType: display.fallbackContent.type,
+      url: display.fallbackContent.url,
+    });
+
+    logger.info(`Scheduler: restored previous content for display ${displayId} (timer for entry ${entryId})`);
+  } else {
+    // Fallback content was deleted — just clear the reference
+    await prisma.display.update({
+      where: { id: displayId },
+      data: { fallbackContentId: null },
+    });
+  }
+
+  // Deactivate the schedule entry
+  await prisma.scheduleEntry.update({
+    where: { id: entryId },
+    data: { isActive: false },
+  });
+}
 
 /**
  * Match a single cron field against a value.
@@ -236,6 +290,16 @@ async function checkSchedule(): Promise<void> {
                 where: { id: entryId },
                 data: { endTime: new Date(now.getTime() + entry.durationSeconds * 1000) },
               });
+
+              // Start precise timer for content restoration
+              if (!durationTimers.has(entryId)) {
+                const timer = setTimeout(() => {
+                  restoreContent(entry.displayId, entryId).catch((err: unknown) => {
+                    logger.error(`Scheduler: failed to restore content for display ${entry.displayId}`, err);
+                  });
+                }, entry.durationSeconds * 1000);
+                durationTimers.set(entryId, timer);
+              }
             } else if (!entry.durationSeconds) {
               // One-time without duration: deactivate immediately
               await prisma.scheduleEntry.update({
@@ -323,6 +387,13 @@ export function stopScheduler(): void {
   if (schedulerTask) {
     schedulerTask.stop();
     schedulerTask = null;
-    logger.info('Scheduler engine stopped');
   }
+
+  // Clear all active duration timers
+  for (const timer of durationTimers.values()) {
+    clearTimeout(timer);
+  }
+  durationTimers.clear();
+
+  logger.info('Scheduler engine stopped');
 }

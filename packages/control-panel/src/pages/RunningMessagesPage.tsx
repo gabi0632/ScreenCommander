@@ -24,6 +24,12 @@ const clockFormatter = new Intl.DateTimeFormat('he-IL', {
   hour12: false,
 });
 
+const dateFormatter = new Intl.DateTimeFormat('he-IL', {
+  weekday: 'short',
+  day: '2-digit',
+  month: '2-digit',
+});
+
 export default function RunningMessagesPage() {
   const { data: ticker, isLoading } = useTicker();
   const { data: displays } = useDisplays();
@@ -51,6 +57,7 @@ export default function RunningMessagesPage() {
 
   // Preview clock
   const [previewTime, setPreviewTime] = useState(() => clockFormatter.format(new Date()));
+  const [previewDate, setPreviewDate] = useState(() => dateFormatter.format(new Date()));
 
   // Sync form with fetched data
   useEffect(() => {
@@ -79,7 +86,9 @@ export default function RunningMessagesPage() {
   // Preview clock tick
   useEffect(() => {
     const interval = setInterval(() => {
-      setPreviewTime(clockFormatter.format(new Date()));
+      const now = new Date();
+      setPreviewTime(clockFormatter.format(now));
+      setPreviewDate(dateFormatter.format(now));
     }, 1000);
     return () => clearInterval(interval);
   }, []);
@@ -375,6 +384,7 @@ export default function RunningMessagesPage() {
             text={previewText}
             speed={speed}
             time={previewTime}
+            date={previewDate}
           />
         ) : (
           <p className="text-caption" style={{ textAlign: 'center', padding: '16px 0' }}>
@@ -397,9 +407,10 @@ interface TickerPreviewProps {
   text: string;
   speed: number;
   time: string;
+  date: string;
 }
 
-function TickerPreview({ bgColor, textColor, fontSize, separator, showClock, clockPosition, text, speed, time }: TickerPreviewProps) {
+function TickerPreview({ bgColor, textColor, fontSize, separator, showClock, clockPosition, text, speed, time, date }: TickerPreviewProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [animDuration, setAnimDuration] = useState(15);
 
@@ -417,19 +428,34 @@ function TickerPreview({ bgColor, textColor, fontSize, separator, showClock, clo
     <div
       style={{
         flexShrink: 0,
-        padding: '0 12px',
-        fontFamily: "'IBM Plex Mono', monospace",
-        fontWeight: 700,
-        fontSize: `${fontSize}px`,
+        padding: '2px 12px',
         color: textColor,
         borderRight: clockPosition === 'left' ? '2px solid rgba(255,255,255,0.3)' : undefined,
         borderLeft: clockPosition === 'right' ? '2px solid rgba(255,255,255,0.3)' : undefined,
         fontVariantNumeric: 'tabular-nums',
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
+        justifyContent: 'center',
       }}
     >
-      {time}
+      <div style={{
+        fontFamily: "'IBM Plex Mono', monospace",
+        fontWeight: 700,
+        fontSize: `${fontSize}px`,
+        lineHeight: 1.1,
+      }}>
+        {time}
+      </div>
+      <div style={{
+        fontFamily: "'Heebo', sans-serif",
+        fontWeight: 500,
+        fontSize: `${Math.round(fontSize * 0.55)}px`,
+        opacity: 0.85,
+        lineHeight: 1.1,
+      }}>
+        {date}
+      </div>
     </div>
   ) : null;
 

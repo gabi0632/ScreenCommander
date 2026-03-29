@@ -19,15 +19,28 @@
 
 .ticker-clock {
   flex-shrink: 0;
-  padding: 8px 24px 0;
-  font-family: 'Heebo', sans-serif;
-  font-weight: 700;
+  padding: 4px 24px;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100%;
+}
+
+.ticker-clock-time {
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.ticker-clock-date {
+  font-family: 'Heebo', sans-serif;
+  font-weight: 500;
+  font-size: 0.55em;
+  opacity: 0.85;
+  line-height: 1.1;
 }
 
 .ticker-clock--left {
