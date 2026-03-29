@@ -84,7 +84,7 @@ export function TickerBar({ config }: TickerBarProps): React.JSX.Element | null 
           className="ticker-scroll-content"
           style={{ animationDuration: `${animDuration}s` }}
         >
-          {sep} {messageText}
+          {messageText} {sep}
         </div>
       </div>
 

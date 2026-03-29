@@ -1,10 +1,18 @@
-import { BrowserWindow, screen } from 'electron';
+import { BrowserWindow, screen, session } from 'electron';
 import { join } from 'path';
 import type { PlayerConfig } from '@screen-commander/shared';
+import { initAdBlocker, YOUTUBE_AD_HIDE_CSS, YOUTUBE_AD_SKIP_JS } from './ad-blocker';
 
 let playerWindow: BrowserWindow | null = null;
+let adBlockerInitialised = false;
 
 export function createPlayerWindow(config: PlayerConfig): BrowserWindow {
+  // Initialise network-level ad blocking once (before any content loads)
+  if (!adBlockerInitialised) {
+    initAdBlocker();
+    adBlockerInitialised = true;
+  }
+
   const displays = screen.getAllDisplays();
   const targetDisplay = displays[config.monitorIndex];
 
@@ -19,6 +27,18 @@ export function createPlayerWindow(config: PlayerConfig): BrowserWindow {
 
   const displayLabel = targetDisplay.label || '';
   console.log(`[window] Display ${config.monitorIndex}: bounds=${width}x${height} at (${x},${y}), scale=${scaleFactor}, label="${displayLabel}"`);
+
+  // Auto-grant media permissions so enumerateDevices() returns device labels.
+  // Without this, Chromium returns empty labels after a fresh start, which
+  // prevents matching the saved audioDeviceId to an actual audio output.
+  session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
+    const allowed = ['media', 'audioCapture', 'mediaKeySystem', 'midi', 'midiSysex'];
+    callback(allowed.includes(permission));
+  });
+  session.defaultSession.setPermissionCheckHandler((_webContents, permission) => {
+    const allowed = ['media', 'audioCapture', 'mediaKeySystem', 'midi', 'midiSysex'];
+    return allowed.includes(permission);
+  });
 
   playerWindow = new BrowserWindow({
     x,
@@ -49,7 +69,7 @@ export function createPlayerWindow(config: PlayerConfig): BrowserWindow {
     },
   });
 
-  // Allow webview audio + block popups + inject cursor hiding into webview guests
+  // Allow webview audio + block popups + inject cursor hiding + ad blocking into webview guests
   playerWindow.webContents.on('did-attach-webview', (_event, webContents) => {
     webContents.setAudioMuted(false);
 
@@ -66,6 +86,33 @@ export function createPlayerWindow(config: PlayerConfig): BrowserWindow {
       // Hide cursor if configured
       if (config.noCursor) {
         webContents.insertCSS('* { cursor: none !important; }');
+      }
+
+      // Inject YouTube ad-blocking CSS and JS into YouTube webview guests
+      const currentUrl = webContents.getURL();
+      if (/youtube\.com|youtu\.be/i.test(currentUrl)) {
+        webContents.insertCSS(YOUTUBE_AD_HIDE_CSS).catch(() => {
+          // Best effort — page may have navigated
+        });
+        webContents.executeJavaScript(YOUTUBE_AD_SKIP_JS).catch(() => {
+          // Best effort
+        });
+      }
+    });
+
+    // Also inject on subsequent navigations within the same webview
+    webContents.on('did-navigate', () => {
+      const currentUrl = webContents.getURL();
+      if (/youtube\.com|youtu\.be/i.test(currentUrl)) {
+        webContents.insertCSS(YOUTUBE_AD_HIDE_CSS).catch(() => {});
+        webContents.executeJavaScript(YOUTUBE_AD_SKIP_JS).catch(() => {});
+      }
+    });
+    webContents.on('did-navigate-in-page', () => {
+      const currentUrl = webContents.getURL();
+      if (/youtube\.com|youtu\.be/i.test(currentUrl)) {
+        webContents.insertCSS(YOUTUBE_AD_HIDE_CSS).catch(() => {});
+        webContents.executeJavaScript(YOUTUBE_AD_SKIP_JS).catch(() => {});
       }
     });
   });

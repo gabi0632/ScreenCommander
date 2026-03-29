@@ -51,12 +51,15 @@
   display: inline-block;
   white-space: nowrap;
   will-change: transform;
-  animation: ticker-scroll-ltr linear infinite;
+  animation: ticker-scroll-rtl linear infinite;
   line-height: normal;
+  direction: rtl;
+  unicode-bidi: embed;
 }
 
-/* Text starts off-screen left, moves right, exits off-screen right */
-@keyframes ticker-scroll-ltr {
+/* RTL ticker: text enters from the left, scrolls right across the screen.
+   Hebrew readers see the start of the text (right side) first as it enters. */
+@keyframes ticker-scroll-rtl {
   0% {
     transform: translateX(-100%);
   }

@@ -9,8 +9,8 @@ interface TextOverlayProps {
 function getAnimationVariants(position: string) {
   if (position === 'ticker') {
     return {
-      initial: { x: '100%' },
-      animate: { x: '-100%' },
+      initial: { x: '-100%' },
+      animate: { x: '100vw' },
       exit: { opacity: 0 },
     };
   }

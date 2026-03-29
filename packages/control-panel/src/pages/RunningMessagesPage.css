@@ -163,11 +163,16 @@
   padding: 24px;
 }
 
-@keyframes ticker-preview-scroll {
+.ticker-preview-scroll-area {
+  container-type: inline-size;
+}
+
+/* RTL ticker preview: text enters from left, scrolls right across the container */
+@keyframes ticker-preview-scroll-rtl {
   0% {
-    transform: translateX(0);
+    transform: translateX(-100%);
   }
   100% {
-    transform: translateX(-100%);
+    transform: translateX(100cqi);
   }
 }

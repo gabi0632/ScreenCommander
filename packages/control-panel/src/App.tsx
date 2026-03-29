@@ -12,6 +12,7 @@ const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
 const RunningMessagesPage = lazy(() => import('./pages/RunningMessagesPage'));
 const AlertsPage = lazy(() => import('./pages/AlertsPage'));
 const ChannelsPage = lazy(() => import('./pages/ChannelsPage'));
+const ActivityLogPage = lazy(() => import('./pages/ActivityLogPage'));
 
 function LoadingFallback() {
   return (
@@ -87,6 +88,14 @@ export function App() {
             element={
               <Suspense fallback={<LoadingFallback />}>
                 <AlertsPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="activity-log"
+            element={
+              <Suspense fallback={<LoadingFallback />}>
+                <ActivityLogPage />
               </Suspense>
             }
           />

@@ -411,7 +411,7 @@ function TickerPreview({ bgColor, textColor, fontSize, separator, showClock, clo
     setAnimDuration(Math.max(3, totalWidth / pxPerSec));
   }, [text, separator, speed, fontSize]);
 
-  const fullText = `${separator.trim()} ${text}`;
+  const fullText = `${text} ${separator.trim()}`;
 
   const clockEl = showClock ? (
     <div
@@ -451,15 +451,16 @@ function TickerPreview({ bgColor, textColor, fontSize, separator, showClock, clo
       }}
     >
       {clockPosition === 'left' && clockEl}
-      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', alignItems: 'center', position: 'relative' }}>
+      <div className="ticker-preview-scroll-area" style={{ flex: 1, overflow: 'hidden', display: 'flex', alignItems: 'center', position: 'relative' }}>
         <div
           ref={scrollRef}
           style={{
             display: 'inline-block',
             whiteSpace: 'nowrap',
             willChange: 'transform',
-            paddingLeft: '100%',
-            animation: `ticker-preview-scroll ${animDuration}s linear infinite`,
+            animation: `ticker-preview-scroll-rtl ${animDuration}s linear infinite`,
+            direction: 'rtl',
+            unicodeBidi: 'embed',
           }}
         >
           {fullText}

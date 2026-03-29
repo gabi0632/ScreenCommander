@@ -28,6 +28,7 @@ interface ElectronAPI {
     noCursor: boolean;
     kiosk: boolean;
     debug: boolean;
+    displayLabel: string;
   }>;
 }
 

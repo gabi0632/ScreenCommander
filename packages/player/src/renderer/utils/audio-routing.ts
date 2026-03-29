@@ -8,6 +8,62 @@ let cachedSinkId: string | null = null;
 let cachedLabel: string | null = null;
 let cacheDisplayId: string | null = null;
 
+// Whether we've already requested media permissions this session
+let mediaPermissionGranted = false;
+
+/**
+ * Request media permissions so that enumerateDevices() returns device labels.
+ * After a fresh Electron start (e.g., after a reboot), Chromium returns empty
+ * labels for all devices until getUserMedia has been called at least once.
+ * We request audio, immediately stop the stream, and cache the result.
+ */
+async function ensureMediaPermissions(): Promise<void> {
+  if (mediaPermissionGranted) return;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    // Immediately stop the stream — we only needed it to unlock device labels
+    for (const track of stream.getTracks()) {
+      track.stop();
+    }
+    mediaPermissionGranted = true;
+    console.log('[audio] Media permissions granted — device labels unlocked');
+  } catch (err) {
+    console.warn('[audio] Failed to request media permissions:', err);
+    // Continue anyway — labels might be available in some Electron configurations
+  }
+}
+
+/**
+ * Enumerate audio output devices, ensuring labels are populated.
+ * Retries up to `maxRetries` times with a short delay if all labels are empty,
+ * which can happen when devices are still initializing after a reboot.
+ */
+async function enumerateAudioOutputs(maxRetries = 3): Promise<MediaDeviceInfo[]> {
+  await ensureMediaPermissions();
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const audioOutputs = devices.filter(
+      (d) => d.kind === 'audiooutput' && d.deviceId !== 'default' && d.deviceId !== 'communications',
+    );
+
+    // Check if at least one device has a non-empty label
+    const hasLabels = audioOutputs.some((d) => d.label.length > 0);
+
+    if (hasLabels || attempt >= maxRetries) {
+      if (!hasLabels && audioOutputs.length > 0) {
+        console.warn('[audio] enumerateDevices returned devices with empty labels after retries');
+      }
+      return audioOutputs;
+    }
+
+    console.log(`[audio] Device labels are empty, retrying (${attempt + 1}/${maxRetries})...`);
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+
+  return [];
+}
+
 /**
  * Find the audio output device for this display.
  *
@@ -21,8 +77,7 @@ async function resolveAudioDevice(
   backendUrl: string,
   displayLabel: string,
 ): Promise<MediaDeviceInfo | null> {
-  const devices = await navigator.mediaDevices.enumerateDevices();
-  const audioOutputs = devices.filter((d) => d.kind === 'audiooutput' && d.deviceId !== 'default' && d.deviceId !== 'communications');
+  const audioOutputs = await enumerateAudioOutputs();
 
   // Strategy 1: Manual override via audioDeviceId on the display record
   try {
@@ -126,6 +181,13 @@ export function buildAudioRoutingScript(deviceLabel: string): string {
   return `
     (async function() {
       try {
+        // Request audio permission to unlock device labels in this webview context.
+        // Without this, enumerateDevices() may return empty labels after a fresh start.
+        try {
+          var stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          stream.getTracks().forEach(function(t) { t.stop(); });
+        } catch(e) { /* permission denied or no audio input — continue anyway */ }
+
         var devices = await navigator.mediaDevices.enumerateDevices();
         var outputs = devices.filter(function(d) { return d.kind === 'audiooutput' && d.label; });
         var target = outputs.find(function(d) { return d.label === "${escaped}"; })

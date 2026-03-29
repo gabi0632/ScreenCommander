@@ -89,6 +89,7 @@ const electronAPI = {
     noCursor: boolean;
     kiosk: boolean;
     debug: boolean;
+    displayLabel: string;
   }> => {
     return ipcRenderer.invoke('get-config');
   },

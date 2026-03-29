@@ -23,6 +23,7 @@ const navItems = [
 
 const systemItems = [
   { to: '/analytics', label: 'אנליטיקס', icon: '📊' },
+  { to: '/activity-log', label: 'יומן פעילות', icon: '📋' },
 ];
 
 export function AppShell() {

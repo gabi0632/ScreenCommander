@@ -24,7 +24,7 @@ function detectEffectiveType(contentType: string, url: string): string {
   if (lowerUrl.startsWith('rtmp://')) {
     return ContentType.RTMP_STREAM;
   }
-  if (/youtube\.com\/watch|youtu\.be\/|youtube\.com\/embed/i.test(url)) {
+  if (/youtube\.com\/watch|youtu\.be\/|youtube\.com\/embed|youtube\.com\/playlist|youtube\.com\/live/i.test(url)) {
     return ContentType.YOUTUBE;
   }
   if (/\.(mp4|webm|ogg|mov|avi|mkv)(\?|$)/i.test(url)) {

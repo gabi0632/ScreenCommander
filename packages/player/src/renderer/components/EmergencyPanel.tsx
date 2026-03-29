@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ActiveOverlay } from '../hooks/useOverlays';
 
 interface EmergencyPanelProps {
   overlays: ActiveOverlay[];
 }
+
+/** Pixels scrolled per second */
+const SCROLL_SPEED = 35;
 
 export function EmergencyPanel({ overlays }: EmergencyPanelProps): React.JSX.Element {
   // Parse alert type and cities from messages like "🚨 ירי רקטות וטילים: צפת, חיפה"
@@ -25,9 +28,48 @@ export function EmergencyPanel({ overlays }: EmergencyPanelProps): React.JSX.Ele
   // Deduplicate cities
   const uniqueCities = [...new Set(citiesFromText)];
 
-  // Use wider panel with columns when many cities
-  const columnCount = uniqueCities.length > 20 ? 3 : uniqueCities.length > 8 ? 2 : 1;
-  const panelClass = `emergency-panel${columnCount > 1 ? ` emergency-panel--cols-${columnCount}` : ''}`;
+  const panelClass = 'emergency-panel';
+
+  // Auto-scroll state: we measure the inner list height and decide whether to scroll
+  const containerRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
+  const [needsScroll, setNeedsScroll] = useState(false);
+  const [scrollDuration, setScrollDuration] = useState(10);
+
+  const measure = useCallback(() => {
+    const container = containerRef.current;
+    const inner = innerRef.current;
+    if (!container || !inner) return;
+    // inner holds one copy of the city list
+    const listHeight = inner.scrollHeight;
+    const viewHeight = container.clientHeight;
+    if (listHeight > viewHeight) {
+      setNeedsScroll(true);
+      // Duration = distance / speed. We scroll exactly one copy height so the duplicate takes over.
+      setScrollDuration(listHeight / SCROLL_SPEED);
+    } else {
+      setNeedsScroll(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    measure();
+    // Re-measure if the window resizes
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [measure, uniqueCities.length]);
+
+  const cityElements = uniqueCities.map((city, i) => (
+    <motion.div
+      key={`${city}-${i}`}
+      className="emergency-panel__city"
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: Math.min(i * 0.04, 1), duration: 0.3 }}
+    >
+      {city}
+    </motion.div>
+  ));
 
   return (
     <AnimatePresence>
@@ -59,19 +101,29 @@ export function EmergencyPanel({ overlays }: EmergencyPanelProps): React.JSX.Ele
             {alertType}
           </div>
 
-          {/* City list — multi-column when many cities */}
-          <div className="emergency-panel__cities">
-            {uniqueCities.map((city, i) => (
-              <motion.div
-                key={`${city}-${i}`}
-                className="emergency-panel__city"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: Math.min(i * 0.04, 1), duration: 0.3 }}
+          {/* City list with vertical auto-scroll */}
+          <div className="emergency-panel__cities" ref={containerRef}>
+            <div
+              className={`emergency-panel__cities-track${needsScroll ? ' emergency-panel__cities-track--scrolling' : ''}`}
+              ref={innerRef}
+              style={needsScroll ? { animationDuration: `${scrollDuration}s` } : undefined}
+            >
+              {cityElements}
+            </div>
+            {/* Duplicate for seamless loop — only rendered when scrolling */}
+            {needsScroll && (
+              <div
+                className="emergency-panel__cities-track emergency-panel__cities-track--scrolling"
+                aria-hidden="true"
+                style={{ animationDuration: `${scrollDuration}s` }}
               >
-                {city}
-              </motion.div>
-            ))}
+                {uniqueCities.map((city, i) => (
+                  <div key={`dup-${city}-${i}`} className="emergency-panel__city">
+                    {city}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Pulsing stripe at left edge */}

@@ -13,6 +13,7 @@ import { tickerRouter } from './routes/ticker.routes';
 import { uploadsRouter } from './routes/uploads.routes';
 import { redAlertRouter } from './routes/red-alert.routes';
 import { authRouter } from './routes/auth.routes';
+import { activityLogRouter } from './routes/activity-log.routes';
 import { errorHandler } from './middleware/error-handler';
 
 export const app = express();
@@ -34,6 +35,7 @@ app.use('/api/ticker', tickerRouter);
 app.use('/api/uploads', uploadsRouter);
 app.use('/api/red-alert', redAlertRouter);
 app.use('/api/auth', authRouter);
+app.use('/api/activity-log', activityLogRouter);
 
 // In production, serve the built control panel as static files
 // This allows the kiosk to load everything from http://localhost:3000

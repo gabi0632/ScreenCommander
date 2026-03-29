@@ -42,10 +42,12 @@
   max-width: 100%;
   width: 100%;
   border-radius: 0;
-  text-align: left;
+  text-align: right;
   padding: 12px 24px;
   white-space: nowrap;
   overflow: hidden;
+  direction: rtl;
+  unicode-bidi: embed;
 }
 
 .text-overlay--urgent {
@@ -132,36 +134,45 @@
 
 .emergency-panel__cities {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0 12px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Fade masks at top and bottom so cities blend in/out smoothly */
+.emergency-panel__cities::before,
+.emergency-panel__cities::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 24px;
+  z-index: 1;
+  pointer-events: none;
+}
+.emergency-panel__cities::before {
+  top: 0;
+  background: linear-gradient(180deg, #0d1a3a 0%, transparent 100%);
+}
+.emergency-panel__cities::after {
+  bottom: 0;
+  background: linear-gradient(0deg, #0a1228 0%, transparent 100%);
+}
+
+/* Track holds one copy of the city list; two tracks sit one after the other */
+.emergency-panel__cities-track {
   display: grid;
   grid-template-columns: 1fr;
   gap: 2px;
-  padding: 10px 12px;
-  overflow-y: auto;
-  align-content: start;
+  padding: 10px 0;
+  flex-shrink: 0;
 }
 
-/* Multi-column for 2 columns */
-.emergency-panel--cols-2 {
-  width: 540px;
-}
-
-.emergency-panel--cols-2 .emergency-panel__cities {
-  grid-template-columns: 1fr 1fr;
-}
-
-/* Multi-column for 3 columns */
-.emergency-panel--cols-3 {
-  width: 780px;
-}
-
-.emergency-panel--cols-3 .emergency-panel__cities {
-  grid-template-columns: 1fr 1fr 1fr;
-}
-
-/* Keep header and type bar spanning full width */
-.emergency-panel--cols-2 .emergency-panel__type,
-.emergency-panel--cols-3 .emergency-panel__type {
-  margin: 0 12px;
+/* When content fits the viewport, no animation needed — the track is static */
+.emergency-panel__cities-track--scrolling {
+  animation: emergency-cities-marquee linear infinite;
 }
 
 .emergency-panel__city {
@@ -176,14 +187,13 @@
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.emergency-panel--cols-2 .emergency-panel__city,
-.emergency-panel--cols-3 .emergency-panel__city {
-  font-size: 15px;
-  padding: 7px 10px;
-}
-
 .emergency-panel__city:nth-child(even) {
   background: rgba(255, 255, 255, 0.04);
+}
+
+@keyframes emergency-cities-marquee {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(-100%); }
 }
 
 .emergency-panel__edge {
