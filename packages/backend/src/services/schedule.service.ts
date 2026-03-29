@@ -8,11 +8,14 @@ import { logger } from '../utils/logger';
 
 let schedulerTask: cron.ScheduledTask | null = null;
 const durationTimers = new Map<string, NodeJS.Timeout>();
+// Tracks recurring+duration entries that just restored — prevents re-trigger until next cron match
+const recentlyRestored = new Set<string>();
 
 /**
  * Restore previous (fallback) content for a display after a scheduled duration expires.
+ * For recurring entries, the entry stays active so it can fire again on the next cron match.
  */
-async function restoreContent(displayId: string, entryId: string): Promise<void> {
+async function restoreContent(displayId: string, entryId: string, keepActive: boolean): Promise<void> {
   durationTimers.delete(entryId);
 
   const display = await prisma.display.findUnique({
@@ -55,11 +58,16 @@ async function restoreContent(displayId: string, entryId: string): Promise<void>
     });
   }
 
-  // Deactivate the schedule entry
-  await prisma.scheduleEntry.update({
-    where: { id: entryId },
-    data: { isActive: false },
-  });
+  // Deactivate one-time entries; recurring entries stay active for the next match
+  if (!keepActive) {
+    await prisma.scheduleEntry.update({
+      where: { id: entryId },
+      data: { isActive: false },
+    });
+  } else {
+    // Mark recurring entry as recently restored — prevents re-trigger until next cron match
+    recentlyRestored.add(entryId);
+  }
 }
 
 /**
@@ -207,25 +215,30 @@ async function checkSchedule(): Promise<void> {
     }
   }
 
-  // Filter out recurring+duration entries whose duration window has passed
-  // For recurring entries with durationSeconds: only show content for durationSeconds
-  // after the cron match minute starts (i.e., within the first durationSeconds of the matched minute)
+  // Filter recurring+duration entries:
+  // - Skip if recently restored and cron doesn't match yet (prevents re-trigger between cron windows)
+  // Sort by priority desc BEFORE filtering so highest priority wins when grouping by display
+  dueEntries.sort((a, b) => b.priority - a.priority);
+
+  // - Allow once cron matches again (new cycle)
   const filteredDueEntries = dueEntries.filter((entry) => {
     if (!entry.recurrenceRule || !entry.durationSeconds) return true;
-    // For recurring+duration: check if we're within durationSeconds of the minute start
-    const secondsIntoMinute = now.getSeconds();
-    // The cron fires at minute boundary; content should show for durationSeconds
-    // Since we check every 30s, we approximate: if durationSeconds < 30, it may be missed
-    // Use a wider window: content active if current second-of-minute < durationSeconds
-    // For longer durations, we track from the minute start
-    return secondsIntoMinute < entry.durationSeconds;
+
+    if (recentlyRestored.has(entry.id)) {
+      if (checkCronMatch(entry.recurrenceRule, now)) {
+        // New cron match — allow re-trigger
+        recentlyRestored.delete(entry.id);
+        return true;
+      }
+      // Still in cooldown — skip until next cron window
+      return false;
+    }
+
+    return true;
   });
 
   // Group by display, highest priority wins
   const displayContentMap = new Map<string, { contentType: string; url: string; entryIds: string[]; hasRecurrence: boolean }>();
-
-  // Sort combined entries by priority desc so highest priority is first
-  dueEntries.sort((a, b) => b.priority - a.priority);
 
   for (const entry of filteredDueEntries) {
     const existing = displayContentMap.get(entry.displayId);
@@ -278,35 +291,35 @@ async function checkSchedule(): Promise<void> {
 
         logger.info(`Scheduler: switched display ${displayId} to ${content.url}`);
 
-        // Deactivate one-time (non-recurring) entries that just triggered
-        // For entries with durationSeconds, set endTime so the restore logic picks them up
+        // Handle entries that just triggered
         for (const entryId of content.entryIds) {
           const entry = dueEntries.find((e) => e.id === entryId);
           if (!entry) continue;
-          if (!entry.recurrenceRule) {
-            if (entry.durationSeconds && !entry.endTime) {
-              // One-time + duration: set endTime = now + duration so restore triggers later
+
+          if (entry.durationSeconds && !durationTimers.has(entryId)) {
+            // Start precise timer for content restoration
+            const isRecurring = !!entry.recurrenceRule;
+            const timer = setTimeout(() => {
+              restoreContent(entry.displayId, entryId, isRecurring).catch((err: unknown) => {
+                logger.error(`Scheduler: failed to restore content for display ${entry.displayId}`, err);
+              });
+            }, entry.durationSeconds * 1000);
+            durationTimers.set(entryId, timer);
+            logger.info(`Scheduler: restore timer set for ${entry.durationSeconds}s (entry ${entryId}, recurring: ${isRecurring})`);
+
+            // For one-time entries, also set endTime as a safety net
+            if (!isRecurring && !entry.endTime) {
               await prisma.scheduleEntry.update({
                 where: { id: entryId },
                 data: { endTime: new Date(now.getTime() + entry.durationSeconds * 1000) },
               });
-
-              // Start precise timer for content restoration
-              if (!durationTimers.has(entryId)) {
-                const timer = setTimeout(() => {
-                  restoreContent(entry.displayId, entryId).catch((err: unknown) => {
-                    logger.error(`Scheduler: failed to restore content for display ${entry.displayId}`, err);
-                  });
-                }, entry.durationSeconds * 1000);
-                durationTimers.set(entryId, timer);
-              }
-            } else if (!entry.durationSeconds) {
-              // One-time without duration: deactivate immediately
-              await prisma.scheduleEntry.update({
-                where: { id: entryId },
-                data: { isActive: false },
-              });
             }
+          } else if (!entry.durationSeconds && !entry.recurrenceRule) {
+            // One-time without duration: deactivate immediately
+            await prisma.scheduleEntry.update({
+              where: { id: entryId },
+              data: { isActive: false },
+            });
           }
         }
       }
@@ -394,6 +407,7 @@ export function stopScheduler(): void {
     clearTimeout(timer);
   }
   durationTimers.clear();
+  recentlyRestored.clear();
 
   logger.info('Scheduler engine stopped');
 }

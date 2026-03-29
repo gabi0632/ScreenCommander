@@ -17,7 +17,23 @@ function triggerUnlock(): void {
   if (unlockCallback) unlockCallback();
 }
 
-export function createKioskWindow(url?: string): BrowserWindow {
+const LOADING_HTML = `data:text/html;charset=utf-8,${encodeURIComponent(`<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head><meta charset="utf-8"><style>
+  body{background:#060b14;color:#8899b4;font-family:'Heebo',sans-serif;
+    display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+  .logo{font-size:2.5rem;color:#00d4aa;margin-bottom:16px;font-weight:700}
+  .status{font-size:1.1rem}
+  @keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;
+    background:#00d4aa;margin-left:8px;animation:pulse 1.5s ease-in-out infinite}
+</style></head>
+<body><div style="text-align:center">
+  <div class="logo">ScreenCommander</div>
+  <div class="status">מחכה לשרת<span class="dot"></span></div>
+</div></body></html>`)}`;
+
+export function createKioskWindow(): BrowserWindow {
   const primaryDisplay = screen.getPrimaryDisplay();
   bounds = { ...primaryDisplay.bounds };
 
@@ -170,16 +186,16 @@ export function createKioskWindow(url?: string): BrowserWindow {
     kioskWindow = null;
   });
 
-  // Load the control panel URL directly (no splash screen)
-  if (url) {
-    kioskWindow.loadURL(url);
-  } else if (process.env['ELECTRON_RENDERER_URL']) {
-    kioskWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
-  } else {
-    kioskWindow.loadFile(join(__dirname, '../renderer/index.html'));
-  }
+  // Show loading screen while waiting for the backend to become ready
+  kioskWindow.loadURL(LOADING_HTML);
 
   return kioskWindow;
+}
+
+export function navigateKiosk(url: string): void {
+  if (kioskWindow && !kioskWindow.isDestroyed()) {
+    kioskWindow.loadURL(url);
+  }
 }
 
 export function onUnlockRequested(callback: () => void): void {

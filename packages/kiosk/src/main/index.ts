@@ -1,8 +1,9 @@
 import { app, ipcMain, BrowserWindow } from 'electron';
-import { createKioskWindow, getKioskWindow, setKioskLocked, isKioskLocked, onUnlockRequested } from './window-manager';
+import { createKioskWindow, navigateKiosk, getKioskWindow, setKioskLocked, isKioskLocked, onUnlockRequested } from './window-manager';
 import { initAutoRecovery } from './auto-recovery';
 import { initLockScreen, destroyLockScreen } from './lock-screen';
 import { getUnlockOverlayScript, getCheckActionScript } from './inject-overlay';
+import { waitForBackend } from './backend-health';
 
 const BACKEND_URL = process.env['BACKEND_URL'] ?? 'http://localhost:3000';
 const CONTROL_PANEL_DEV_URL = process.env['CONTROL_PANEL_URL'] ?? 'http://localhost:5173';
@@ -12,18 +13,26 @@ const isDev = !!process.env['ELECTRON_RENDERER_URL'];
 let actionPoller: ReturnType<typeof setInterval> | null = null;
 let unlockPoller: ReturnType<typeof setInterval> | null = null;
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   console.log('[kiosk] App ready, creating kiosk window...');
 
   const controlPanelUrl = isDev ? CONTROL_PANEL_DEV_URL : BACKEND_URL;
-  const window = createKioskWindow(controlPanelUrl);
+  const window = createKioskWindow();
   initAutoRecovery(window);
   initLockScreen(window, BACKEND_URL);
   registerIpcHandlers(window);
   registerUnlockShortcut(window);
   startUnlockPoller(window);
 
-  console.log(`[kiosk] Loading control panel from ${controlPanelUrl}`);
+  console.log(`[kiosk] Waiting for backend at ${BACKEND_URL}...`);
+  try {
+    await waitForBackend(BACKEND_URL, 120000);
+    console.log(`[kiosk] Backend ready, loading control panel from ${controlPanelUrl}`);
+  } catch (err) {
+    console.error('[kiosk] Backend wait timed out:', (err as Error).message);
+    console.log(`[kiosk] Loading control panel anyway — auto-recovery will retry`);
+  }
+  navigateKiosk(controlPanelUrl);
 });
 
 function registerIpcHandlers(window: BrowserWindow): void {

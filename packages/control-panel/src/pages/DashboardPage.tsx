@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useDisplays, useBlackoutAll, useIdentifyDisplay, useReloadAll } from '../hooks/useDisplays';
 import { useSendMessage, useDismissAllMessages, useActiveMessages, useDismissMessage } from '../hooks/useMessages';
-import { usePlayHistory } from '../hooks/useAnalytics';
 import { DisplayCard } from '../components/DisplayCard';
 import { AudioDeviceNamesModal } from '../components/modals/AudioDeviceNamesModal';
 import { Button } from '../components/ui/Button';
@@ -13,7 +12,6 @@ import { Select } from '../components/ui/Select';
 import { Chip } from '../components/ui/Chip';
 import { Badge } from '../components/ui/Badge';
 import { DisplayStatus, MessagePosition, MessageAnimation, MessagePriority } from '@screen-commander/shared';
-import { contentTypeLabels } from '../lib/constants';
 import './DashboardPage.css';
 
 const positionOptions = [
@@ -39,7 +37,6 @@ const priorityOptions = [
 export default function DashboardPage() {
   const { data: displays, isLoading } = useDisplays();
   const { data: activeMessages } = useActiveMessages();
-  const { data: playHistory } = usePlayHistory();
   const blackoutAll = useBlackoutAll();
   const reloadAll = useReloadAll();
   const identifyDisplay = useIdentifyDisplay();
@@ -219,39 +216,6 @@ export default function DashboardPage() {
                 <Button variant="danger" size="sm" onClick={() => handleDismissMessage(msg.id)}>
                   הפסק
                 </Button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Activity Log */}
-      {playHistory && playHistory.length > 0 && (
-        <div className="dashboard-active-messages" style={{ marginTop: 24 }}>
-          <div className="dashboard-section-header">
-            <h2 className="text-h2">יומן פעילות</h2>
-          </div>
-          <div className="dashboard-active-list">
-            {playHistory.slice(0, 10).map((entry) => (
-              <div key={entry.id} className="active-message-card">
-                <div className="active-message-content">
-                  <div className="active-message-text" style={{ direction: 'ltr', textAlign: 'left', fontFamily: 'var(--font-mono)', fontSize: '0.75rem' }}>
-                    {entry.contentUrl}
-                  </div>
-                  <div className="active-message-meta">
-                    <Badge variant="blue">
-                      {contentTypeLabels[entry.contentType] ?? entry.contentType}
-                    </Badge>
-                    <span className="text-caption">
-                      {new Date(entry.startedAt).toLocaleString('he-IL')}
-                    </span>
-                    {entry.durationSec != null && (
-                      <span className="text-caption">
-                        {Math.round(entry.durationSec / 60)} דק׳
-                      </span>
-                    )}
-                  </div>
-                </div>
               </div>
             ))}
           </div>

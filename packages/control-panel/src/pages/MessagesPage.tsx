@@ -6,6 +6,7 @@ import { Input, Textarea } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { Chip } from '../components/ui/Chip';
 import { Card } from '../components/ui/Card';
+import { ImageInput } from '../components/ui/ImageInput';
 import { Badge } from '../components/ui/Badge';
 import { useToast } from '../components/ui/Toast';
 import { MessagePosition, MessageAnimation, MessagePriority } from '@screen-commander/shared';
@@ -30,6 +31,8 @@ export default function MessagesPage() {
   const [fontSize, setFontSize] = useState(24);
   const [fontColor, setFontColor] = useState('#ffffff');
   const [bgColor, setBgColor] = useState('rgba(0,0,0,0.8)');
+  const [imageUrl, setImageUrl] = useState('');
+  const [imageSize, setImageSize] = useState(100);
 
   const handleSend = () => {
     if (!text.trim()) {
@@ -43,6 +46,8 @@ export default function MessagesPage() {
     sendMessage.mutate(
       {
         text: text.trim(),
+        imageUrl: imageUrl || undefined,
+        imageSize: imageUrl ? imageSize : undefined,
         targetDisplayIds: ids,
         position: position as typeof MessagePosition[keyof typeof MessagePosition],
         fontSize,
@@ -56,6 +61,8 @@ export default function MessagesPage() {
         onSuccess: () => {
           toast('הודעה נשלחה', 'success');
           setText('');
+          setImageUrl('');
+          setImageSize(100);
           setTargetIds([]);
         },
         onError: () => toast('שגיאה בשליחת הודעה', 'error'),
@@ -109,6 +116,25 @@ export default function MessagesPage() {
             placeholder="הזן הודעה..."
             rows={3}
           />
+
+          <ImageInput value={imageUrl} onChange={setImageUrl} />
+
+          {imageUrl && (
+            <div>
+              <label style={{ fontSize: '0.8125rem', fontWeight: 500, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>
+                גודל תמונה: {imageSize}%
+              </label>
+              <input
+                type="range"
+                min={10}
+                max={100}
+                step={5}
+                value={imageSize}
+                onChange={(e) => setImageSize(parseInt(e.target.value, 10))}
+                style={{ width: '100%', accentColor: 'var(--accent)' }}
+              />
+            </div>
+          )}
 
           <div className="messages-form-row">
             <Select

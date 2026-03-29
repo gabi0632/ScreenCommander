@@ -9,8 +9,9 @@ import { Badge } from '../components/ui/Badge';
 import { useToast } from '../components/ui/Toast';
 import type { ScheduleEntry } from '@screen-commander/shared';
 import { ContentType } from '@screen-commander/shared';
-import { contentTypeLabels } from '../lib/constants';
+import { contentTypeLabels, CHANNEL_NAMES } from '../lib/constants';
 import { ChannelManager } from '../components/ChannelManager';
+import { useFavorites } from '../hooks/useFavorites';
 import { api } from '../lib/api';
 import './SchedulerPage.css';
 
@@ -74,6 +75,42 @@ function describeCron(cron: string): string {
   }
   if (min !== '*' && hour !== '*') return `כל יום בשעה ${hour}:${min.padStart(2, '0')}`;
   return cron;
+
+}
+
+/** Check if a single cron field matches a value (supports *, step, exact, ranges, comma-separated). */
+function cronFieldMatches(field: string, value: number): boolean {
+  if (field === '*') return true;
+  return field.split(',').some((part) => {
+    const trimmed = part.trim();
+    if (trimmed.startsWith('*/')) return value % parseInt(trimmed.slice(2), 10) === 0;
+    if (trimmed.includes('-')) {
+      const [lo, hi] = trimmed.split('-').map(Number);
+      return lo !== undefined && hi !== undefined && value >= lo && value <= hi;
+    }
+    return parseInt(trimmed, 10) === value;
+  });
+}
+
+/** Calculate the next time a cron expression will match, starting from `from`. */
+function nextCronMatch(cronExpr: string, from: Date): Date | null {
+  const parts = cronExpr.trim().split(/\s+/);
+  if (parts.length !== 5) return null;
+  const [minField, hourField, , , dowField] = parts as [string, string, string, string, string];
+
+  const candidate = new Date(from);
+  candidate.setSeconds(0, 0);
+  candidate.setMinutes(candidate.getMinutes() + 1);
+
+  for (let i = 0; i < 1440; i++) {
+    if (cronFieldMatches(minField, candidate.getMinutes()) &&
+        cronFieldMatches(hourField, candidate.getHours()) &&
+        cronFieldMatches(dowField, candidate.getDay())) {
+      return candidate;
+    }
+    candidate.setMinutes(candidate.getMinutes() + 1);
+  }
+  return null;
 }
 
 /* ── Custom DateTime helpers ── */
@@ -209,6 +246,18 @@ export default function SchedulerPage() {
   const deleteEntry = useDeleteScheduleEntry();
   const updateEntry = useUpdateScheduleEntry();
   const { toast } = useToast();
+  const { data: favorites } = useFavorites();
+
+  function getContentLabel(url: string, type: string): { name: string | null; showUrl: boolean } {
+    if (type === ContentType.HLS_STREAM || type === ContentType.RTMP_STREAM) {
+      const presetName = CHANNEL_NAMES[url];
+      if (presetName) return { name: presetName, showUrl: false };
+      const fav = favorites?.find((f) => f.url === url);
+      if (fav) return { name: fav.name, showUrl: false };
+      return { name: null, showUrl: true };
+    }
+    return { name: null, showUrl: true };
+  }
 
   // Form state
   const [displayId, setDisplayId] = useState('');
@@ -586,34 +635,45 @@ export default function SchedulerPage() {
                     const isExpired = entry.endTime && new Date(entry.endTime) < new Date();
                     const isEffectivelyActive = entry.isActive && !isExpired;
 
+                    const displayData = displays?.find((d) => d.id === entry.displayId);
+                    const sourceContent = displayData?.currentContent;
+                    const sourceLabel = getContentLabel(sourceContent?.url ?? '', sourceContent?.type ?? '');
+                    const targetLabel = getContentLabel(contentInfo?.url ?? '', contentInfo?.type ?? '');
+                    const sourceTypeLabel = sourceContent ? (contentTypeLabels[sourceContent.type] ?? sourceContent.type) : '';
+                    const targetTypeLabel = typeLabel;
+                    const infoStyle = { fontSize: '0.8rem', color: 'var(--text-secondary)' } as const;
+                    const valueStyle = { fontSize: '0.8rem', color: 'var(--text-primary)' } as const;
+                    const accentStyle = { fontSize: '0.8rem', color: 'var(--accent)' } as const;
+                    const blueStyle = { fontSize: '0.8rem', color: 'var(--blue)' } as const;
+                    const amberStyle = { fontSize: '0.8rem', color: 'var(--amber)' } as const;
+
                     return (
                       <div key={entry.id} className={`scheduler-entry${!isEffectivelyActive ? ' expired' : ''}`}>
                         <div className="scheduler-entry-bar">
-                          <div className="scheduler-entry-info">
-                            {typeLabel && (
-                              <span style={{ marginBottom: 4 }}><Badge variant="default">{typeLabel}</Badge></span>
+                          <div className="scheduler-entry-info" style={{ gap: 4 }}>
+                            {sourceContent && (
+                              <>
+                                <span style={infoStyle}>תוכן מקורי: <span style={valueStyle}>{sourceLabel.name ?? sourceContent.url}</span></span>
+                                <span style={infoStyle}>סוג תוכן מקורי: <span style={valueStyle}>{sourceTypeLabel}</span></span>
+                              </>
                             )}
-                            <span className="text-mono" style={{ fontSize: '0.75rem', direction: 'ltr', textAlign: 'left' }}>
-                              {contentInfo?.url ?? entry.contentId}
-                            </span>
-                            <span className="text-caption">
-                              {formatDateTime(entry.startTime)}
-                              {entry.endTime ? ` — ${formatDateTime(entry.endTime)}` : ''}
-                            </span>
+                            <span style={infoStyle}>תוכן יעד: <span style={valueStyle}>{targetLabel.name ?? contentInfo?.url ?? entry.contentId}</span></span>
+                            <span style={infoStyle}>סוג תוכן יעד: <span style={valueStyle}>{targetTypeLabel || 'לא ידוע'}</span></span>
                             {entry.recurrenceRule && (
-                              <span className="text-caption" style={{ color: 'var(--accent)' }}>
-                                {describeCron(entry.recurrenceRule)}
-                              </span>
+                              <span style={infoStyle}>תדירות: <span style={accentStyle}>{describeCron(entry.recurrenceRule)}</span></span>
                             )}
+                            {entry.recurrenceRule && (() => {
+                              const next = nextCronMatch(entry.recurrenceRule, new Date());
+                              return next ? (
+                                <span style={infoStyle}>הבא: <span style={blueStyle}>{formatDateTime(next.toISOString())}</span></span>
+                              ) : null;
+                            })()}
                             {entry.durationSeconds && (
-                              <span className="text-caption" style={{ color: 'var(--amber)' }}>
-                                משך: {formatDuration(entry.durationSeconds)} (חוזר לתוכן הקודם)
-                              </span>
+                              <span style={infoStyle}>משך: <span style={amberStyle}>{formatDuration(entry.durationSeconds)} (חוזר לתוכן הקודם)</span></span>
                             )}
+                            <span style={infoStyle}>התחלה: <span style={valueStyle}>{formatDateTime(entry.startTime)}{entry.endTime ? ` — ${formatDateTime(entry.endTime)}` : ''}</span></span>
                             {entry.priority > 0 && (
-                              <span className="text-caption" style={{ color: 'var(--text-muted)' }}>
-                                עדיפות: {entry.priority}
-                              </span>
+                              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>עדיפות: {entry.priority}</span>
                             )}
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

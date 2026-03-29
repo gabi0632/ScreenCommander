@@ -57,21 +57,23 @@ export function ContentFrame({ content }: ContentFrameProps): React.JSX.Element 
 
   const effectiveType = detectEffectiveType(content.contentType, content.url);
 
+  // key={content.url} forces React to unmount/remount on URL change,
+  // preventing stale video frames when switching between same-type streams
   switch (effectiveType) {
     case ContentType.WEB_URL:
-      return <WebViewContent url={content.url} />;
+      return <WebViewContent key={content.url} url={content.url} />;
     case ContentType.YOUTUBE:
-      return <YouTubeContent url={content.url} />;
+      return <YouTubeContent key={content.url} url={content.url} />;
     case ContentType.HLS_STREAM:
-      return <VideoPlayer url={content.url} type="hls" />;
+      return <VideoPlayer key={content.url} url={content.url} type="hls" />;
     case ContentType.RTMP_STREAM:
-      return <VideoPlayer url={content.url} type="rtmp" />;
+      return <VideoPlayer key={content.url} url={content.url} type="rtmp" />;
     case ContentType.LOCAL_VIDEO:
-      return <LocalVideoContent url={content.url} />;
+      return <LocalVideoContent key={content.url} url={content.url} />;
     case ContentType.LOCAL_IMAGE:
-      return <LocalImageContent url={content.url} />;
+      return <LocalImageContent key={content.url} url={content.url} />;
     case ContentType.CUSTOM_HTML:
-      return <CustomHtmlContent html={content.url} />;
+      return <CustomHtmlContent key={content.url} html={content.url} />;
     default:
       return <ErrorScreen message={`Unsupported content type: ${effectiveType}`} />;
   }
