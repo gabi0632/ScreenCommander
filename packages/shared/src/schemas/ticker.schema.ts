@@ -23,6 +23,7 @@ export const updateTickerConfigSchema = z.object({
   fontSize: z.number().int().min(12).max(120).optional(),
   speed: z.number().int().min(1).max(20).optional(),
   separator: z.string().max(10).optional(),
+  fontFamily: z.string().max(100).optional(),
   showClock: z.boolean().optional(),
   clockPosition: z.enum(['left', 'right']).optional(),
   targetDisplayIds: z.union([z.literal('all'), z.array(z.string().min(1))]).optional(),

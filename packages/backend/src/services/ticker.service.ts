@@ -40,6 +40,7 @@ export async function updateTickerConfig(input: UpdateTickerConfigInput): Promis
   if (input.fontSize !== undefined) data['fontSize'] = input.fontSize;
   if (input.speed !== undefined) data['speed'] = input.speed;
   if (input.separator !== undefined) data['separator'] = input.separator;
+  if (input.fontFamily !== undefined) data['fontFamily'] = input.fontFamily;
   if (input.showClock !== undefined) data['showClock'] = input.showClock;
   if (input.clockPosition !== undefined) data['clockPosition'] = input.clockPosition;
   if (input.targetDisplayIds !== undefined) {
@@ -132,6 +133,7 @@ function buildPayload(config: TickerConfigWithMessages) {
       fontSize: config.fontSize,
       speed: config.speed,
       separator: config.separator,
+      fontFamily: config.fontFamily,
       showClock: config.showClock,
       clockPosition: config.clockPosition,
       targetDisplayIds,

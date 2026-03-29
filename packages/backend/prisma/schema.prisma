@@ -125,6 +125,7 @@ model TickerConfig {
   fontSize         Int             @default(28)
   speed            Int             @default(5)
   separator        String          @default(" ■ ")
+  fontFamily       String          @default("Heebo")
   showClock        Boolean         @default(true)
   clockPosition    String          @default("left")
   targetDisplayIds String          @default("all")

@@ -15,6 +15,7 @@ export interface TickerConfig {
   fontSize: number;
   speed: number;
   separator: string;
+  fontFamily: string;
   showClock: boolean;
   clockPosition: 'left' | 'right';
   targetDisplayIds: string | string[];

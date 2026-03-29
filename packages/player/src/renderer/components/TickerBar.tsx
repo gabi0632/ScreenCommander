@@ -19,7 +19,7 @@ const dateFormatter = new Intl.DateTimeFormat('he-IL', {
 });
 
 export function TickerBar({ config }: TickerBarProps): React.JSX.Element | null {
-  const { backgroundColor, textColor, fontSize, speed, separator, showClock, clockPosition, messages } = config;
+  const { backgroundColor, textColor, fontSize, speed, separator, fontFamily, showClock, clockPosition, messages } = config;
 
   const activeMessages = messages.filter((m) => m.isActive);
 
@@ -73,15 +73,15 @@ export function TickerBar({ config }: TickerBarProps): React.JSX.Element | null 
       className={`ticker-clock ${clockPosition === 'right' ? 'ticker-clock--right' : 'ticker-clock--left'}`}
       style={{ backgroundColor, color: textColor, fontSize: `${fontSize}px` }}
     >
-      <div className="ticker-clock-time">{time}</div>
-      <div className="ticker-clock-date">{date}</div>
+      <div className="ticker-clock-time" style={fontFamily ? { fontFamily: `'${fontFamily}', sans-serif` } : undefined}>{time}</div>
+      <div className="ticker-clock-date" style={fontFamily ? { fontFamily: `'${fontFamily}', sans-serif` } : undefined}>{date}</div>
     </div>
   ) : null;
 
   return (
     <div
       className="ticker-bar"
-      style={{ backgroundColor, color: textColor, fontSize: `${fontSize}px` }}
+      style={{ backgroundColor, color: textColor, fontSize: `${fontSize}px`, fontFamily: fontFamily ? `'${fontFamily}', sans-serif` : undefined }}
       role="marquee"
       aria-live="off"
       aria-label="הודעות רצות"

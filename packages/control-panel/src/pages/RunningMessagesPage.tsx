@@ -47,6 +47,7 @@ export default function RunningMessagesPage() {
   const [fontSize, setFontSize] = useState(28);
   const [speed, setSpeed] = useState(5);
   const [separator, setSeparator] = useState(' ■ ');
+  const [fontFamily, setFontFamily] = useState('Heebo');
   const [showClock, setShowClock] = useState(true);
   const [clockPosition, setClockPosition] = useState<'left' | 'right'>('left');
   const [targetMode, setTargetMode] = useState<'all' | 'specific'>('all');
@@ -68,6 +69,7 @@ export default function RunningMessagesPage() {
     setFontSize(ticker.fontSize);
     setSpeed(ticker.speed);
     setSeparator(ticker.separator);
+    if (ticker.fontFamily) setFontFamily(ticker.fontFamily);
     setShowClock(ticker.showClock);
     setClockPosition(ticker.clockPosition as 'left' | 'right');
 
@@ -102,6 +104,7 @@ export default function RunningMessagesPage() {
         fontSize,
         speed,
         separator,
+        fontFamily,
         showClock,
         clockPosition,
         targetDisplayIds: targetMode === 'all' ? 'all' : targetIds,
@@ -254,6 +257,21 @@ export default function RunningMessagesPage() {
               ltr
             />
             <Select
+              label="גופן"
+              value={fontFamily}
+              onChange={(e) => setFontFamily(e.target.value)}
+              options={[
+                { value: 'Heebo', label: 'Heebo' },
+                { value: 'Rubik', label: 'Rubik' },
+                { value: 'Assistant', label: 'Assistant' },
+                { value: 'Varela Round', label: 'Varela Round' },
+                { value: 'Secular One', label: 'Secular One' },
+                { value: 'Tahoma', label: 'Tahoma' },
+                { value: 'Arial', label: 'Arial' },
+                { value: 'David', label: 'David' },
+              ]}
+            />
+            <Select
               label="מיקום שעון"
               value={clockPosition}
               onChange={(e) => setClockPosition(e.target.value as 'left' | 'right')}
@@ -379,6 +397,7 @@ export default function RunningMessagesPage() {
             textColor={textColor}
             fontSize={Math.min(fontSize, 20)}
             separator={separator}
+            fontFamily={fontFamily}
             showClock={showClock}
             clockPosition={clockPosition}
             text={previewText}
@@ -402,6 +421,7 @@ interface TickerPreviewProps {
   textColor: string;
   fontSize: number;
   separator: string;
+  fontFamily: string;
   showClock: boolean;
   clockPosition: 'left' | 'right';
   text: string;
@@ -410,7 +430,7 @@ interface TickerPreviewProps {
   date: string;
 }
 
-function TickerPreview({ bgColor, textColor, fontSize, separator, showClock, clockPosition, text, speed, time, date }: TickerPreviewProps) {
+function TickerPreview({ bgColor, textColor, fontSize, separator, fontFamily, showClock, clockPosition, text, speed, time, date }: TickerPreviewProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [animDuration, setAnimDuration] = useState(15);
 
@@ -418,8 +438,8 @@ function TickerPreview({ bgColor, textColor, fontSize, separator, showClock, clo
     const el = scrollRef.current;
     if (!el) return;
     const totalWidth = el.scrollWidth;
-    const pxPerSec = speed * 60;
-    setAnimDuration(Math.max(3, totalWidth / pxPerSec));
+    const pxPerSec = speed * 15; // Match player's TickerBar calculation
+    setAnimDuration(Math.max(5, totalWidth / pxPerSec));
   }, [text, separator, speed, fontSize]);
 
   const fullText = `${text} ${separator.trim()}`;
@@ -440,7 +460,7 @@ function TickerPreview({ bgColor, textColor, fontSize, separator, showClock, clo
       }}
     >
       <div style={{
-        fontFamily: "'IBM Plex Mono', monospace",
+        fontFamily: `'${fontFamily}', sans-serif`,
         fontWeight: 700,
         fontSize: `${fontSize}px`,
         lineHeight: 1.1,
@@ -448,7 +468,7 @@ function TickerPreview({ bgColor, textColor, fontSize, separator, showClock, clo
         {time}
       </div>
       <div style={{
-        fontFamily: "'Heebo', sans-serif",
+        fontFamily: `'${fontFamily}', sans-serif`,
         fontWeight: 500,
         fontSize: `${Math.round(fontSize * 0.55)}px`,
         opacity: 0.85,
@@ -471,7 +491,7 @@ function TickerPreview({ bgColor, textColor, fontSize, separator, showClock, clo
         display: 'flex',
         alignItems: 'center',
         overflow: 'hidden',
-        fontFamily: "'Heebo', sans-serif",
+        fontFamily: `'${fontFamily}', sans-serif`,
         fontWeight: 600,
         direction: 'ltr',
       }}
