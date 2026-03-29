@@ -6,6 +6,7 @@ export interface PlayerConfig {
   noCursor: boolean;
   kiosk: boolean;
   debug: boolean;
+  displayLabel?: string;
 }
 
 export interface PlayerState {

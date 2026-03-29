@@ -3,6 +3,7 @@ import { useDisplays, useBlackoutAll, useIdentifyDisplay, useReloadAll } from '.
 import { useSendMessage, useDismissAllMessages, useActiveMessages, useDismissMessage } from '../hooks/useMessages';
 import { usePlayHistory } from '../hooks/useAnalytics';
 import { DisplayCard } from '../components/DisplayCard';
+import { AudioDeviceNamesModal } from '../components/modals/AudioDeviceNamesModal';
 import { Button } from '../components/ui/Button';
 import { useToast } from '../components/ui/Toast';
 import { Modal } from '../components/ui/Modal';
@@ -48,6 +49,7 @@ export default function DashboardPage() {
   const { toast } = useToast();
 
   const [broadcastOpen, setBroadcastOpen] = useState(false);
+  const [audioNamesOpen, setAudioNamesOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bcText, setBcText] = useState('');
   const [bcImageUrl, setBcImageUrl] = useState('');
@@ -151,6 +153,9 @@ export default function DashboardPage() {
         <div className="dashboard-actions">
           <Button onClick={() => setBroadcastOpen(true)}>
             שלח הודעה לכולם
+          </Button>
+          <Button onClick={() => setAudioNamesOpen(true)}>
+            שמות יציאות שמע
           </Button>
           <Button onClick={handleReloadAll} disabled={reloadAll.isPending}>
             רענן הכל
@@ -328,6 +333,11 @@ export default function DashboardPage() {
           <Input label="צבע רקע" value={bcBgColor} onChange={(e) => setBcBgColor(e.target.value)} ltr />
         </div>
       </Modal>
+
+      <AudioDeviceNamesModal
+        open={audioNamesOpen}
+        onClose={() => setAudioNamesOpen(false)}
+      />
     </div>
   );
 }

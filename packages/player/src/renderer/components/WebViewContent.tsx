@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react';
+import { getAudioDeviceLabel, buildAudioRoutingScript } from '../utils/audio-routing';
 
 interface WebViewContentProps {
   url: string;
@@ -21,12 +22,30 @@ export function WebViewContent({ url }: WebViewContentProps): React.JSX.Element 
       }
     };
 
+    const handleDomReady = async () => {
+      // Inject audio routing into webview guest
+      if (!window.electronAPI) return;
+      try {
+        const config = await window.electronAPI.getConfig();
+        const label = await getAudioDeviceLabel(config.displayId, config.backendUrl, config.displayLabel);
+        if (label && webview) {
+          const script = buildAudioRoutingScript(label);
+          // @ts-expect-error -- Electron webview has executeJavaScript
+          await webview.executeJavaScript(script);
+        }
+      } catch {
+        // Audio routing in webview is best-effort
+      }
+    };
+
     webview.addEventListener('will-navigate', handleWillNavigate as EventListener);
+    webview.addEventListener('dom-ready', handleDomReady);
 
     return () => {
       webview.removeEventListener('will-navigate', handleWillNavigate as EventListener);
+      webview.removeEventListener('dom-ready', handleDomReady);
     };
-  }, []);
+  }, [url]);
 
   if (isJavaScriptUrl(url)) {
     window.electronAPI.reportError('Blocked javascript: URL');

@@ -17,8 +17,8 @@ export function createPlayerWindow(config: PlayerConfig): BrowserWindow {
   const { x, y, width, height } = targetDisplay.bounds;
   const scaleFactor = targetDisplay.scaleFactor || 1;
 
-  console.log(`[window] Display ${config.monitorIndex}: bounds=${width}x${height} at (${x},${y}), scale=${scaleFactor}`);
-  console.log(`[window] Display size: ${targetDisplay.size.width}x${targetDisplay.size.height}`);
+  const displayLabel = targetDisplay.label || '';
+  console.log(`[window] Display ${config.monitorIndex}: bounds=${width}x${height} at (${x},${y}), scale=${scaleFactor}, label="${displayLabel}"`);
 
   playerWindow = new BrowserWindow({
     x,
@@ -110,4 +110,10 @@ export function getTargetDisplayBounds(monitorIndex: number): { width: number; h
     return { width: 1920, height: 1080 };
   }
   return { width: target.bounds.width, height: target.bounds.height };
+}
+
+export function getTargetDisplayLabel(monitorIndex: number): string {
+  const displays = screen.getAllDisplays();
+  const target = displays[monitorIndex];
+  return target?.label || '';
 }

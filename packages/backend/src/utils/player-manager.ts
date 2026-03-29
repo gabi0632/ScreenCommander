@@ -59,9 +59,21 @@ export function spawnPlayer(displayId: string, monitorIndex: number): void {
       '--backend-url', backendUrl,
     ], {
       cwd: projectRoot,
-      stdio: 'ignore',
+      stdio: ['ignore', 'pipe', 'pipe'],
       detached: false,
       env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined },
+    });
+
+    // Forward player logs to backend logger
+    child.stdout?.on('data', (data: Buffer) => {
+      const lines = data.toString().trim();
+      if (lines) logger.info(`[player:${displayId.slice(-6)}] ${lines}`);
+    });
+    child.stderr?.on('data', (data: Buffer) => {
+      const lines = data.toString().trim();
+      if (lines && !lines.includes('DevTools') && !lines.includes('GPU')) {
+        logger.warn(`[player:${displayId.slice(-6)}] ${lines}`);
+      }
     });
   } else {
     // Dev: use pnpm to run electron-vite dev

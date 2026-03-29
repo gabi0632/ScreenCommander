@@ -16,21 +16,40 @@ export function LocalVideoContent({ url }: LocalVideoContentProps): React.JSX.El
 
     setError(null);
 
-    video.muted = false;
+    // Start MUTED — unmute after audio is routed to the correct output
+    video.muted = true;
     video.volume = 1.0;
 
-    if (window.electronAPI) {
-      void window.electronAPI.getConfig().then((config) => {
-        void autoRouteAudio(video, config.displayId, config.backendUrl);
-      });
-    }
+    const routeAndPlay = async (): Promise<void> => {
+      // Route audio FIRST
+      if (window.electronAPI) {
+        try {
+          const config = await window.electronAPI.getConfig();
+          await autoRouteAudio(video, config.displayId, config.backendUrl, config.displayLabel);
+        } catch (err) {
+          console.warn('[local-video] Audio routing failed:', err);
+        }
+      }
+      // Unmute — audio goes to routed device (or default if routing failed)
+      video.muted = false;
+      video.volume = 1.0;
 
-    video.play().catch(() => {
-      video.muted = true;
-      video.play().catch(() => {
-        setError(`Failed to play video: ${url}`);
-      });
-    });
+      try {
+        await video.play();
+      } catch {
+        // Some browsers require muted autoplay first, then unmute
+        video.muted = true;
+        try {
+          await video.play();
+          // Re-attempt unmute after play starts
+          video.muted = false;
+        } catch {
+          setError(`Failed to play video: ${url}`);
+        }
+      }
+    };
+
+    void routeAndPlay();
   }, [url]);
 
   if (error) {
@@ -47,7 +66,6 @@ export function LocalVideoContent({ url }: LocalVideoContentProps): React.JSX.El
         objectFit: 'contain',
         background: '#000',
       }}
-      autoPlay
       loop
       playsInline
       onError={() => setError(`Failed to load video: ${url}`)}

@@ -117,6 +117,40 @@
   border-radius: var(--radius-sm);
 }
 
+.display-card-audio {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.display-card-audio-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.display-card-audio-select {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  direction: ltr;
+  text-align: left;
+  cursor: pointer;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.display-card-audio-select:hover,
+.display-card-audio-select:focus {
+  border-color: var(--accent);
+}
+
 .display-card-actions {
   display: flex;
   gap: 8px;

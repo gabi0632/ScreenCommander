@@ -24,15 +24,25 @@ export function VideoPlayer({ url, type }: VideoPlayerProps): React.JSX.Element 
       return;
     }
 
-    video.muted = false;
+    // Start MUTED — we'll unmute after audio is routed to the correct output
+    video.muted = true;
     video.volume = 1.0;
 
-    // Route audio to the configured output device
-    if (window.electronAPI) {
-      void window.electronAPI.getConfig().then((config) => {
-        void autoRouteAudio(video, config.displayId, config.backendUrl);
-      });
-    }
+    // Route audio to the correct HDMI/DP output, then start playback
+    const routeAudioAndPlay = async (): Promise<void> => {
+      // Route audio FIRST so setSinkId is set before any sound plays
+      if (window.electronAPI) {
+        try {
+          const config = await window.electronAPI.getConfig();
+          await autoRouteAudio(video, config.displayId, config.backendUrl, config.displayLabel);
+        } catch (err) {
+          console.warn('[video] Audio routing failed:', err);
+        }
+      }
+      // Now unmute — audio goes to the routed device (or default if routing failed)
+      video.muted = false;
+      video.volume = 1.0;
+    };
 
     // HLS playback
     if (Hls.isSupported()) {
@@ -48,13 +58,11 @@ export function VideoPlayer({ url, type }: VideoPlayerProps): React.JSX.Element 
       hls.attachMedia(video);
 
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        video.muted = false;
-        video.volume = 1.0;
-        video.play().then(() => {
-          video.muted = false;
-          video.volume = 1.0;
-        }).catch((err) => {
-          console.warn('[hls] Play failed:', err);
+        // Route audio THEN play — never unmute before routing completes
+        routeAudioAndPlay().then(() => {
+          video.play().catch((err) => {
+            console.warn('[hls] Play failed:', err);
+          });
         });
       });
 
@@ -83,8 +91,10 @@ export function VideoPlayer({ url, type }: VideoPlayerProps): React.JSX.Element 
       };
     } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
       video.src = url;
-      video.play().catch(() => {
-        console.warn('[hls] Native HLS play failed');
+      routeAudioAndPlay().then(() => {
+        video.play().catch(() => {
+          console.warn('[hls] Native HLS play failed');
+        });
       });
     } else {
       setError('HLS playback is not supported in this environment');
@@ -106,9 +116,7 @@ export function VideoPlayer({ url, type }: VideoPlayerProps): React.JSX.Element 
         objectFit: 'cover',
         background: '#000',
       }}
-      autoPlay
       playsInline
-      muted={false}
     />
   );
 }

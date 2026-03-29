@@ -1,0 +1,106 @@
+.audio-names-footer {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-start;
+}
+
+.audio-names-loading {
+  color: var(--text-muted);
+}
+
+.audio-names-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.audio-names-hint {
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  margin: 0;
+  text-align: center;
+}
+
+.audio-names-row {
+  display: grid;
+  grid-template-columns: 1fr 200px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--bg-input);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.audio-names-device-info {
+  min-width: 0;
+  text-align: right;
+}
+
+.audio-names-device-name {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  direction: ltr;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.audio-names-screen-name {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.combo-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.combo-input-row {
+  display: flex;
+  gap: 0;
+}
+
+.combo-input-field {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 0.8125rem;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  outline: none;
+  direction: rtl;
+}
+
+.combo-input-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  left: 0;
+  margin-top: 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 10;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.combo-input-option {
+  padding: 8px 12px;
+  font-size: 0.8125rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  direction: rtl;
+  border-bottom: 1px solid var(--border);
+}
+
+.combo-input-option:hover {
+  background: var(--bg-elevated);
+}

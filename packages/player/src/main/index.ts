@@ -2,7 +2,7 @@ import { app, ipcMain } from 'electron';
 import type { PlayerConfig } from '@screen-commander/shared';
 import { WS_EVENTS } from '@screen-commander/shared';
 import { parseCliArgs } from './cli-args';
-import { createPlayerWindow, getPlayerWindow } from './window-manager';
+import { createPlayerWindow, getPlayerWindow, getTargetDisplayLabel } from './window-manager';
 import { initWebSocket, emitEvent, destroyWebSocket, handleRendererReady } from './ws-client';
 import { initHeartbeat, destroyHeartbeat } from './heartbeat';
 import { initAutoRecovery } from './auto-recovery';
@@ -97,7 +97,8 @@ function registerIpcHandlers(): void {
     const httpBackendUrl = config.backendUrl
       .replace('ws://', 'http://')
       .replace('wss://', 'https://');
-    return { ...config, backendUrl: httpBackendUrl };
+    const displayLabel = getTargetDisplayLabel(config.monitorIndex);
+    return { ...config, backendUrl: httpBackendUrl, displayLabel };
   });
 
   // Renderer reports it has mounted and is ready to receive state

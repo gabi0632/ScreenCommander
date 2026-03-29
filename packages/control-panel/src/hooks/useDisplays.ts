@@ -55,6 +55,8 @@ export function useAssignContent() {
 interface AudioDevice {
   name: string;
   deviceId: string;
+  screenName?: string;
+  customName?: string;
 }
 
 export function useAudioDevices() {

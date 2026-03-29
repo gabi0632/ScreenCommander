@@ -37,4 +37,5 @@ export interface AppSettings {
     autoRelockTimeoutSeconds: number;
     unlockKeyCombination: string;
   };
+  audioDeviceNames?: Record<string, string>;
 }

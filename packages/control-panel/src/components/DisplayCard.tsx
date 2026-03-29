@@ -6,7 +6,7 @@ import { CHANNEL_NAMES } from '../lib/constants';
 import { Badge, PortBadge } from './ui/Badge';
 import { Button } from './ui/Button';
 import { useToast } from './ui/Toast';
-import { useIdentifyDisplay, useDeleteDisplay, useUpdateDisplay } from '../hooks/useDisplays';
+import { useIdentifyDisplay, useDeleteDisplay, useUpdateDisplay, useAudioDevices } from '../hooks/useDisplays';
 import { ChangeUrlModal } from './modals/ChangeUrlModal';
 import { SendMessageToDisplayModal } from './modals/SendMessageToDisplayModal';
 import './DisplayCard.css';
@@ -36,6 +36,7 @@ export function DisplayCard({ display }: DisplayCardProps) {
   const identify = useIdentifyDisplay();
   const deleteDisplay = useDeleteDisplay();
   const updateDisplay = useUpdateDisplay();
+  const { data: audioDevices } = useAudioDevices();
   const { toast } = useToast();
 
   const handleNameSave = () => {
@@ -146,6 +147,37 @@ export function DisplayCard({ display }: DisplayCardProps) {
             <span className="display-card-meta-item">
               פעיל מאז: {formatUptime(display.createdAt)}
             </span>
+          </div>
+
+          <div className="display-card-audio">
+            <label className="display-card-audio-label">יציאת שמע:</label>
+            <select
+              className="display-card-audio-select"
+              value={display.audioDeviceId ?? ''}
+              onChange={(e) => {
+                const value = e.target.value || null;
+                updateDisplay.mutate(
+                  { id: display.id, audioDeviceId: value },
+                  {
+                    onSuccess: () => {
+                      toast(value ? `שמע: ${value}` : 'שמע: ברירת מחדל', 'success');
+                      // Reload player so it picks up the new audio device
+                      setTimeout(() => {
+                        void fetch(`/api/displays/reload-all`, { method: 'POST' }).catch(() => {});
+                      }, 300);
+                    },
+                    onError: () => toast('שגיאה בעדכון שמע', 'error'),
+                  },
+                );
+              }}
+            >
+              <option value="">אוטומטי (ברירת מחדל)</option>
+              {audioDevices?.map((d) => (
+                <option key={d.deviceId} value={d.name}>
+                  {d.customName || d.screenName ? `${d.customName || d.screenName}` : d.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="display-card-actions">
